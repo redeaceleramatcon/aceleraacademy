@@ -8,34 +8,50 @@ import { LiveCard } from "@/components/home/LiveCard";
 import { CategoryFilter } from "@/components/home/CategoryFilter";
 import { Container } from "@/components/ui/Container";
 import {
-  getContinueWatching,
-  getFeatured,
+  getCategories,
+  getContentsByCategory,
+  getFeaturedContent,
   getLives,
-  getByCategory,
-} from "@/lib/mock-data";
+} from "@/lib/data/content";
+
+export const revalidate = 60;
 
 const rowCardClass = "w-[260px] shrink-0 sm:w-[280px]";
 const featuredCardClass = "w-[300px] shrink-0 sm:w-[360px]";
 const liveCardClass = "w-[280px] shrink-0 sm:w-[320px]";
 
-export default function Home() {
-  const continueWatching = getContinueWatching();
-  const featured = getFeatured();
-  const lives = getLives();
+/** Fileiras temáticas da Home, na ordem em que aparecem. */
+const HOME_ROW_SLUGS = ["vendas", "gestao", "marketing", "lideranca"];
+
+export default async function Home() {
+  const [featured, lives, categories] = await Promise.all([
+    getFeaturedContent(),
+    getLives(),
+    getCategories(),
+  ]);
+
+  const rows = (
+    await Promise.all(
+      HOME_ROW_SLUGS.map(async (slug) => {
+        const category = categories.find((item) => item.slug === slug);
+        if (!category) return null;
+        const items = await getContentsByCategory(slug);
+        return items.length > 0 ? { category, items } : null;
+      }),
+    )
+  ).filter((row) => row !== null);
+
+  const vazio = featured.length === 0 && lives.length === 0 && rows.length === 0;
 
   return (
     <>
       <Header />
       <main>
+        {/* Hero vem de featured_slots; some sozinho quando não há slot ativo. */}
         <Hero />
 
-        {continueWatching.length > 0 && (
-          <ContentRow title="Continuar assistindo">
-            {continueWatching.map((item) => (
-              <ContentCard key={item.id} item={item} className={rowCardClass} />
-            ))}
-          </ContentRow>
-        )}
+        {/* "Continuar assistindo" depende de content_progress e de login, que
+            ainda não existem. A seção fica fora até haver progresso real. */}
 
         <section className="py-6 sm:py-8">
           <Container>
@@ -46,41 +62,41 @@ export default function Home() {
           </Container>
         </section>
 
-        <ContentRow title="Conteúdos em destaque" href="/conteudos">
-          {featured.map((item) => (
-            <FeaturedCard key={item.id} item={item} className={featuredCardClass} />
-          ))}
-        </ContentRow>
+        {featured.length > 0 && (
+          <ContentRow title="Conteúdos em destaque" href="/conteudos">
+            {featured.map((item) => (
+              <FeaturedCard key={item.slug} item={item} className={featuredCardClass} />
+            ))}
+          </ContentRow>
+        )}
 
-        <ContentRow title="Lives com parceiros" href="/conteudos">
-          {lives.map((item) => (
-            <LiveCard key={item.id} item={item} className={liveCardClass} />
-          ))}
-        </ContentRow>
+        {lives.length > 0 && (
+          <ContentRow title="Lives com parceiros" href="/conteudos">
+            {lives.map((item) => (
+              <LiveCard key={item.slug} item={item} className={liveCardClass} />
+            ))}
+          </ContentRow>
+        )}
 
-        <ContentRow title="Vendas" href="/categorias/vendas">
-          {getByCategory("vendas").map((item) => (
-            <ContentCard key={item.id} item={item} className={rowCardClass} />
-          ))}
-        </ContentRow>
+        {rows.map(({ category, items }) => (
+          <ContentRow
+            key={category.slug}
+            title={category.name}
+            href={`/categorias/${category.slug}`}
+          >
+            {items.map((item) => (
+              <ContentCard key={item.slug} item={item} className={rowCardClass} />
+            ))}
+          </ContentRow>
+        ))}
 
-        <ContentRow title="Gestão" href="/categorias/gestao">
-          {getByCategory("gestao").map((item) => (
-            <ContentCard key={item.id} item={item} className={rowCardClass} />
-          ))}
-        </ContentRow>
-
-        <ContentRow title="Marketing" href="/categorias/marketing">
-          {getByCategory("marketing").map((item) => (
-            <ContentCard key={item.id} item={item} className={rowCardClass} />
-          ))}
-        </ContentRow>
-
-        <ContentRow title="Liderança" href="/categorias/lideranca">
-          {getByCategory("lideranca").map((item) => (
-            <ContentCard key={item.id} item={item} className={rowCardClass} />
-          ))}
-        </ContentRow>
+        {vazio && (
+          <Container className="py-20">
+            <p className="text-center text-sm text-muted">
+              Ainda não há conteúdos publicados na Academy.
+            </p>
+          </Container>
+        )}
       </main>
       <Footer />
     </>

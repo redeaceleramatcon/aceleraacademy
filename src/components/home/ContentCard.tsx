@@ -6,8 +6,10 @@ import { cn } from "@/lib/utils";
 import type { ContentItem } from "@/types/content";
 
 export function ContentCard({ item, className }: { item: ContentItem; className?: string }) {
+  const meta = [item.mentor, item.duration].filter(Boolean).join(" · ");
+
   return (
-    <Link href={`/conteudos/${item.id}`} className={cn("group block", className)}>
+    <Link href={`/conteudos/${item.slug}`} className={cn("group block", className)}>
       <div className="relative aspect-video overflow-hidden rounded-xl bg-surface ring-1 ring-white/5 transition-all duration-300 ease-out group-hover:-translate-y-1 group-hover:ring-white/10 group-hover:shadow-elevated">
         <Image
           src={item.image}
@@ -28,9 +30,7 @@ export function ContentCard({ item, className }: { item: ContentItem; className?
 
         <div className="absolute inset-x-0 bottom-0 p-3 pb-4">
           <p className="line-clamp-1 text-sm font-semibold text-white">{item.title}</p>
-          <p className="mt-0.5 line-clamp-1 text-xs text-white/60">
-            {item.mentor} · {item.duration}
-          </p>
+          {meta && <p className="mt-0.5 line-clamp-1 text-xs text-white/60">{meta}</p>}
         </div>
 
         {typeof item.progress === "number" && (

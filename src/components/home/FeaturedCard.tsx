@@ -7,7 +7,7 @@ import type { ContentItem } from "@/types/content";
 
 export function FeaturedCard({ item, className }: { item: ContentItem; className?: string }) {
   return (
-    <Link href={`/conteudos/${item.id}`} className={cn("group block", className)}>
+    <Link href={`/conteudos/${item.slug}`} className={cn("group block", className)}>
       <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-white/5 transition-all duration-300 group-hover:-translate-y-1 group-hover:ring-white/10 group-hover:shadow-elevated">
         <div className="relative aspect-[16/10] overflow-hidden">
           <Image
@@ -28,10 +28,12 @@ export function FeaturedCard({ item, className }: { item: ContentItem; className
         <div className="p-4">
           <p className="line-clamp-1 text-base font-semibold text-foreground">{item.title}</p>
           <p className="mt-1 line-clamp-2 text-sm text-muted">{item.description}</p>
-          <div className="mt-3 flex items-center justify-between text-xs text-subtle">
-            <span>{item.mentor}</span>
-            <span>{item.duration}</span>
-          </div>
+          {(item.mentor || item.duration) && (
+            <div className="mt-3 flex items-center justify-between text-xs text-subtle">
+              {item.mentor && <span>{item.mentor}</span>}
+              {item.duration && <span className="ml-auto">{item.duration}</span>}
+            </div>
+          )}
         </div>
       </div>
     </Link>

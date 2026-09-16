@@ -3,6 +3,7 @@ import type { ContentType } from "@/types/content";
 
 const typeStyles: Record<ContentType, string> = {
   live: "bg-brand-orange text-white",
+  webinar: "bg-brand-orange text-white",
   curso: "bg-brand-blue-light text-white",
   aula: "bg-white/10 text-foreground",
   entrevista: "bg-white/10 text-foreground",
@@ -11,6 +12,7 @@ const typeStyles: Record<ContentType, string> = {
 
 const typeLabels: Record<ContentType, string> = {
   live: "Live",
+  webinar: "Webinar",
   curso: "Curso",
   aula: "Aula",
   entrevista: "Entrevista",

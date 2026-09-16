@@ -2,17 +2,24 @@ import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { PlayIcon } from "@/components/icons";
-import { heroContent } from "@/lib/mock-data";
+import { getHeroContent } from "@/lib/data/content";
 
-export function Hero() {
-  const { eyebrow, title, description, mentor, duration, category, image, contentId } =
-    heroContent;
+/**
+ * O Hero vem exclusivamente de featured_slots (slot = 'hero', active = true).
+ * Sem slot ativo — ou apontando para conteúdo não publicado — a seção some,
+ * em vez de mostrar um destaque inventado.
+ */
+export async function Hero() {
+  const item = await getHeroContent();
+  if (!item) return null;
+
+  const meta = [item.mentor, item.duration, item.categoryName].filter(Boolean);
 
   return (
     <section className="relative h-[88vh] min-h-[620px] w-full overflow-hidden">
       <Image
-        src={image}
-        alt={title}
+        src={item.image}
+        alt={item.title}
         fill
         priority
         sizes="100vw"
@@ -25,33 +32,34 @@ export function Hero() {
       <Container className="relative flex h-full flex-col justify-end pb-16 pt-28 sm:pb-20">
         <div className="max-w-xl sm:max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-orange-light">
-            {eyebrow}
+            {item.categoryName ?? "Acelera Academy"}
           </p>
           <h1 className="mt-4 text-4xl font-bold leading-[1.05] tracking-tight text-white text-balance sm:text-5xl lg:text-6xl">
-            {title}
+            {item.title}
           </h1>
           <p className="mt-5 max-w-lg text-base leading-relaxed text-white/70 sm:text-lg">
-            {description}
+            {item.description}
           </p>
 
           <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/60">
-            <span>{mentor}</span>
-            <span className="h-1 w-1 rounded-full bg-white/30" />
-            <span>{duration}</span>
-            <span className="h-1 w-1 rounded-full bg-white/30" />
-            <span>{category}</span>
+            {meta.map((value, index) => (
+              <span key={value} className="flex items-center gap-x-3">
+                {index > 0 && <span className="h-1 w-1 rounded-full bg-white/30" />}
+                {value}
+              </span>
+            ))}
           </div>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
-              href={`/conteudos/${contentId}`}
+              href={`/conteudos/${item.slug}`}
               className="inline-flex items-center gap-2 rounded-lg bg-brand-orange px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-orange/20 transition-all hover:bg-brand-orange-light hover:shadow-brand-orange/30"
             >
               <PlayIcon className="h-4 w-4" />
               Assistir agora
             </Link>
             <Link
-              href={`/categorias/gestao`}
+              href={item.category ? `/categorias/${item.category}` : "/conteudos"}
               className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:border-brand-blue-light/60 hover:bg-brand-blue-light/10"
             >
               Ver conteúdo

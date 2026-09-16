@@ -5,8 +5,10 @@ import { cn } from "@/lib/utils";
 import type { ContentItem } from "@/types/content";
 
 export function LiveCard({ item, className }: { item: ContentItem; className?: string }) {
+  const meta = [item.mentor, item.duration].filter(Boolean).join(" · ");
+
   return (
-    <Link href={`/conteudos/${item.id}`} className={cn("group block", className)}>
+    <Link href={`/conteudos/${item.slug}`} className={cn("group block", className)}>
       <div className="relative aspect-video overflow-hidden rounded-xl ring-1 ring-white/5 transition-all duration-300 group-hover:-translate-y-1 group-hover:ring-white/10 group-hover:shadow-elevated">
         <Image
           src={item.image}
@@ -26,9 +28,7 @@ export function LiveCard({ item, className }: { item: ContentItem; className?: s
             </p>
           )}
           <p className="mt-1 line-clamp-2 text-sm font-semibold text-white">{item.title}</p>
-          <p className="mt-1 text-xs text-white/60">
-            {item.mentor} · {item.duration}
-          </p>
+          {meta && <p className="mt-1 text-xs text-white/60">{meta}</p>}
         </div>
       </div>
     </Link>

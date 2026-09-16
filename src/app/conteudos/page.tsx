@@ -3,7 +3,9 @@ import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { CategoryFilter } from "@/components/home/CategoryFilter";
 import { ContentCard } from "@/components/home/ContentCard";
-import { contentItems } from "@/lib/mock-data";
+import { getContents } from "@/lib/data/content";
+
+export const revalidate = 60;
 
 export default async function ConteudosPage({
   searchParams,
@@ -11,13 +13,7 @@ export default async function ConteudosPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  const query = q?.trim().toLowerCase();
-
-  const items = query
-    ? contentItems.filter((item) =>
-        [item.title, item.mentor, item.description].join(" ").toLowerCase().includes(query)
-      )
-    : contentItems;
+  const items = await getContents({ query: q?.trim() });
 
   return (
     <>
@@ -37,13 +33,15 @@ export default async function ConteudosPage({
 
           <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5">
             {items.map((item) => (
-              <ContentCard key={item.id} item={item} />
+              <ContentCard key={item.slug} item={item} />
             ))}
           </div>
 
           {items.length === 0 && (
             <p className="mt-16 text-center text-sm text-muted">
-              Nenhum conteúdo encontrado para essa busca.
+              {q
+                ? "Nenhum conteúdo encontrado para essa busca."
+                : "Ainda não há conteúdos publicados."}
             </p>
           )}
         </Container>

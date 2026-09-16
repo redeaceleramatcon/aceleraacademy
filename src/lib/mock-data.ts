@@ -1,4 +1,43 @@
-import type { Category, CategorySlug, ContentItem } from "@/types/content";
+/**
+ * ARQUIVO LEGADO — não é usado por nenhuma página.
+ *
+ * Home, catálogo, categorias e detalhe passaram a ler do Supabase através de
+ * `src/lib/data/content.ts`. Isto fica aqui apenas como referência dos 31
+ * conteúdos de exemplo (títulos, mentores, imagens) até que o catálogo real
+ * seja cadastrado, e então pode ser removido.
+ *
+ * Os tipos abaixo são locais de propósito: o arquivo não depende mais de
+ * `@/types/content`, que agora reflete o formato vindo do banco.
+ */
+type CategorySlug =
+  | "vendas"
+  | "gestao"
+  | "marketing"
+  | "compras"
+  | "financeiro"
+  | "pessoas"
+  | "lideranca"
+  | "operacao"
+  | "tecnologia";
+
+interface Category {
+  slug: CategorySlug;
+  name: string;
+}
+
+interface ContentItem {
+  id: string;
+  title: string;
+  description: string;
+  mentor: string;
+  category: CategorySlug;
+  type: "curso" | "aula" | "entrevista" | "live" | "parceiro";
+  duration: string;
+  image: string;
+  partner?: string;
+  progress?: number;
+  featured?: boolean;
+}
 
 /**
  * Imagens de demonstração (Unsplash), uma por conteúdo. Centralizadas aqui

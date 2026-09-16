@@ -4,16 +4,9 @@ import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { CategoryFilter } from "@/components/home/CategoryFilter";
 import { ContentCard } from "@/components/home/ContentCard";
-import { categories, categoryNameMap, getByCategory } from "@/lib/mock-data";
-import type { CategorySlug } from "@/types/content";
+import { getCategoryBySlug, getContentsByCategory } from "@/lib/data/content";
 
-export function generateStaticParams() {
-  return categories.map((category) => ({ slug: category.slug }));
-}
-
-function isCategorySlug(value: string): value is CategorySlug {
-  return value in categoryNameMap;
-}
+export const revalidate = 60;
 
 export default async function CategoriaPage({
   params,
@@ -21,9 +14,10 @@ export default async function CategoriaPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  if (!isCategorySlug(slug)) notFound();
+  const category = await getCategoryBySlug(slug);
+  if (!category) notFound();
 
-  const items = getByCategory(slug);
+  const items = await getContentsByCategory(slug);
 
   return (
     <>
@@ -34,7 +28,7 @@ export default async function CategoriaPage({
             Categoria
           </p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            {categoryNameMap[slug]}
+            {category.name}
           </h1>
           <p className="mt-2 text-sm text-muted">
             {items.length} {items.length === 1 ? "conteúdo" : "conteúdos"}
@@ -46,7 +40,7 @@ export default async function CategoriaPage({
 
           <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5">
             {items.map((item) => (
-              <ContentCard key={item.id} item={item} />
+              <ContentCard key={item.slug} item={item} />
             ))}
           </div>
 

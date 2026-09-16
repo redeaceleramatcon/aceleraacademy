@@ -1,9 +1,12 @@
 import Link from "next/link";
-import { categories } from "@/lib/mock-data";
+import { getCategories } from "@/lib/data/content";
 import { cn } from "@/lib/utils";
-import type { CategorySlug } from "@/types/content";
 
-export function CategoryFilter({ activeSlug }: { activeSlug?: CategorySlug }) {
+export async function CategoryFilter({ activeSlug }: { activeSlug?: string }) {
+  const categories = await getCategories();
+
+  if (categories.length === 0) return null;
+
   return (
     <div className="scrollbar-hide flex gap-2.5 overflow-x-auto pb-1">
       {categories.map((category) => {
