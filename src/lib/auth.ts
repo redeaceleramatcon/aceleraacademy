@@ -11,6 +11,11 @@ import { createClient } from "@/lib/supabase/server";
  * Sempre `getUser()`, nunca `getSession()`: só o primeiro valida o token junto
  * ao Supabase, em vez de confiar no cookie recebido do navegador.
  */
+export interface SessionVinculo {
+  lojaCnpj: string;
+  papel: "master" | "funcionario";
+}
+
 export interface SessionProfile {
   id: string;
   email: string;
@@ -18,6 +23,8 @@ export interface SessionProfile {
   fullName: string | null;
   avatarUrl: string | null;
   createdAt: string | null;
+  /** Vínculos ativos (master ou funcionário) — vazio quando não tem nenhuma loja. */
+  vinculos: SessionVinculo[];
 }
 
 export const getSessionUser = cache(async () => {
@@ -33,20 +40,27 @@ export const getSessionProfile = cache(async (): Promise<SessionProfile | null> 
   if (!user) return null;
 
   const supabase = await createClient();
-  // O RLS de profiles já restringe a linha ao próprio usuário; o filtro
-  // explícito deixa a intenção visível.
-  const { data } = await supabase
-    .from("profiles")
-    .select("full_name, avatar_url")
-    .eq("id", user.id)
-    .maybeSingle();
+  // O RLS de profiles e de academy_vinculos já restringe as linhas ao próprio
+  // usuário; o filtro explícito deixa a intenção visível.
+  const [{ data: profileData }, { data: vinculosData }] = await Promise.all([
+    supabase.from("profiles").select("full_name, avatar_url").eq("id", user.id).maybeSingle(),
+    supabase
+      .from("academy_vinculos")
+      .select("loja_cnpj, papel")
+      .eq("user_id", user.id)
+      .eq("status", "ativo"),
+  ]);
 
   return {
     id: user.id,
     email: user.email ?? "",
-    fullName: data?.full_name ?? null,
-    avatarUrl: data?.avatar_url ?? null,
+    fullName: profileData?.full_name ?? null,
+    avatarUrl: profileData?.avatar_url ?? null,
     createdAt: user.created_at ?? null,
+    vinculos: (vinculosData ?? []).map((v) => ({
+      lojaCnpj: v.loja_cnpj,
+      papel: v.papel as SessionVinculo["papel"],
+    })),
   };
 });
 

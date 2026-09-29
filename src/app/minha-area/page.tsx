@@ -8,10 +8,12 @@ import { getSessionProfile, displayName } from "@/lib/auth";
 import { signOut } from "@/app/login/actions";
 
 /**
- * Área do associado — exige sessão.
+ * Área do associado — exige sessão e pelo menos um vínculo ativo.
  *
  * O proxy já barra quem não está autenticado; a verificação aqui é a garantia
- * definitiva, junto à fonte de dados.
+ * definitiva, junto à fonte de dados. Sem nenhum academy_vinculos ativo (loja
+ * revogada pelo ADM, ou funcionário removido pelo master), a página mostra o
+ * aviso de acesso indisponível em vez de conteúdo de associado.
  *
  * Progresso depende de content_progress, que ainda não foi implementado. Os
  * indicadores continuam como "—": nada nesta página finge ser dado real.
@@ -21,6 +23,49 @@ export default async function MinhaAreaPage() {
   if (!profile) redirect("/login?redirect=/minha-area");
 
   const nome = displayName(profile);
+
+  if (profile.vinculos.length === 0) {
+    return (
+      <>
+        <Header />
+        <main className="pt-24 sm:pt-28">
+          <Container className="pb-16 pt-2 sm:pt-4">
+            <div className="mx-auto max-w-lg rounded-2xl border border-white/10 bg-surface p-8 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-orange-light">
+                Sem acesso no momento
+              </p>
+              <h1 className="mt-3 text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                Nenhuma loja vinculada à sua conta
+              </h1>
+              <p className="mt-3 text-sm leading-relaxed text-muted">
+                Isso acontece quando a loja não está mais ativa na Rede, ou quando seu acesso foi
+                removido pelo responsável da loja. Se isso não estiver correto, fale com a equipe
+                da Rede ou com o responsável da sua loja.
+              </p>
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                <Link
+                  href="/conteudos"
+                  className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:border-brand-blue-light/60 hover:bg-brand-blue-light/10"
+                >
+                  Ver conteúdos abertos
+                </Link>
+                <form action={signOut}>
+                  <button
+                    type="submit"
+                    className="rounded-lg border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:border-white/30 hover:bg-white/10"
+                  >
+                    Sair
+                  </button>
+                </form>
+              </div>
+            </div>
+          </Container>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
   const membroDesde = profile.createdAt
     ? new Date(profile.createdAt).toLocaleDateString("pt-BR", {
         month: "long",
