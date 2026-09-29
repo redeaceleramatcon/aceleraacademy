@@ -44,6 +44,29 @@ body {
   color: #fff;
 }
 
+/*
+ * <option> é renderizado pelo SO/navegador, fora da árvore da página — não
+ * herda cor nenhuma do resto do site. Sem isto, o menu abre com fundo branco
+ * e texto branco (só aparece com o mouse em cima, no hover padrão do SO).
+ * Damos ao popup a mesma paleta do site: janela azul-marinho, item em foco
+ * ganha o laranja da marca.
+ */
+select {
+  color-scheme: dark;
+}
+
+option {
+  background-color: var(--color-brand-blue-dark);
+  color: var(--color-foreground);
+}
+
+option:checked,
+option:hover,
+option:focus {
+  background-color: var(--color-brand-blue);
+  color: var(--color-brand-orange-light);
+}
+
 .scrollbar-hide {
   scrollbar-width: none;
   -ms-overflow-style: none;
