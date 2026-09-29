@@ -28,11 +28,21 @@ export default async function AdminPage() {
       <Header />
       <main className="pt-24 sm:pt-28">
         <Container className="pb-16 pt-2 sm:pt-4">
-          <h1 className="text-xl font-bold text-foreground sm:text-2xl">Rede — atividade</h1>
-          <p className="mt-2 text-sm text-muted">
-            {usuarios.length} conta{usuarios.length === 1 ? "" : "s"} ativa
-            {usuarios.length === 1 ? "" : "s"} em {porLoja.size} loja{porLoja.size === 1 ? "" : "s"}.
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h1 className="text-xl font-bold text-foreground sm:text-2xl">Rede — atividade</h1>
+              <p className="mt-2 text-sm text-muted">
+                {usuarios.length} conta{usuarios.length === 1 ? "" : "s"} ativa
+                {usuarios.length === 1 ? "" : "s"} em {porLoja.size} loja{porLoja.size === 1 ? "" : "s"}.
+              </p>
+            </div>
+            <Link
+              href="/admin/conteudos/novo"
+              className="rounded-lg bg-brand-orange px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-light"
+            >
+              + Novo conteúdo
+            </Link>
+          </div>
 
           <div className="mt-8 rounded-2xl border border-white/10 bg-surface p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-subtle">
