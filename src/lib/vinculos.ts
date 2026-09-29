@@ -199,8 +199,10 @@ export async function revogarVinculoFuncionario(vinculoId: string, revogadoPor: 
  * Revoga TODOS os vínculos ativos de um CNPJ (master e funcionários) — usada
  * quando o ADM diz que a loja não está mais ativa. Não é o master derrubando
  * um funcionário (revogado_por fica nulo, revogado_motivo marca a origem).
+ * Exportada: também é chamada pelo webhook do ADM (Fase 6), não só pela
+ * revalidação de login.
  */
-async function revogarVinculosDaLoja(lojaCnpj: string): Promise<void> {
+export async function revogarVinculosDaLoja(lojaCnpj: string): Promise<void> {
   const supabase = createServiceClient();
   const { error } = await supabase
     .from("academy_vinculos")
