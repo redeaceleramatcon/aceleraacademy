@@ -6,6 +6,9 @@
  * portanto nunca chegam ao navegador.
  */
 export interface VerificacaoCnpj {
+  /** Status real da loja no ADM — usado sozinho na revalidação de login. */
+  ativo: boolean;
+  /** ativo && tem e-mail de master — usado para decidir o cadastro. */
   elegivel: boolean;
   nomeLoja?: string;
   /** E-mail do associado no ADM — vira o "acesso master" no primeiro acesso. */
@@ -21,7 +24,7 @@ export function apenasDigitos(valor: string) {
 export async function verificarCnpjNoAdm(cnpjBruto: string): Promise<VerificacaoCnpj> {
   const cnpj = apenasDigitos(cnpjBruto);
   if (cnpj.length !== 14) {
-    return { elegivel: false };
+    return { ativo: false, elegivel: false };
   }
 
   const url = process.env.ADM_VERIFY_URL;
@@ -30,7 +33,7 @@ export async function verificarCnpjNoAdm(cnpjBruto: string): Promise<Verificacao
   // Falha fechada: sem integração configurada, ninguém é considerado elegível.
   if (!url || !segredo) {
     console.error("Integração com o ADM não configurada (ADM_VERIFY_URL/ADM_VERIFY_SECRET).");
-    return { elegivel: false, indisponivel: true };
+    return { ativo: false, elegivel: false, indisponivel: true };
   }
 
   try {
@@ -47,25 +50,29 @@ export async function verificarCnpjNoAdm(cnpjBruto: string): Promise<Verificacao
 
     if (!resposta.ok) {
       console.error("ADM respondeu", resposta.status);
-      return { elegivel: false, indisponivel: resposta.status >= 500 };
+      return { ativo: false, elegivel: false, indisponivel: resposta.status >= 500 };
     }
 
     const corpo = (await resposta.json()) as {
+      ativo?: boolean;
       elegivel?: boolean;
       nomeLoja?: string;
       emailMaster?: string;
     };
 
+    const ativo = Boolean(corpo.ativo);
+
     if (!corpo.elegivel || !corpo.emailMaster) {
       // Loja ativa sem e-mail cadastrado no ADM cai aqui também: bloqueia e
       // deixa a tela orientar contato com o suporte — não há pra quem mandar
-      // o convite de master.
-      return { elegivel: false };
+      // o convite de master. `ativo` continua refletindo o status real, pra
+      // quem só precisa saber isso (revalidação de login).
+      return { ativo, elegivel: false };
     }
 
-    return { elegivel: true, nomeLoja: corpo.nomeLoja, emailMaster: corpo.emailMaster };
+    return { ativo: true, elegivel: true, nomeLoja: corpo.nomeLoja, emailMaster: corpo.emailMaster };
   } catch (erro) {
     console.error("Falha ao falar com o ADM:", erro);
-    return { elegivel: false, indisponivel: true };
+    return { ativo: false, elegivel: false, indisponivel: true };
   }
 }

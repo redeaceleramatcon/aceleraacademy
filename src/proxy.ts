@@ -12,7 +12,7 @@ import { createServerClient } from "@supabase/ssr";
  *
  * O catálogo continua público: nada aqui bloqueia /, /conteudos ou /categorias.
  */
-const ROTAS_PROTEGIDAS = ["/minha-area"];
+const ROTAS_PROTEGIDAS = ["/minha-area", "/equipe"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });

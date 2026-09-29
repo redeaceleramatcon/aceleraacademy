@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { revalidarVinculosDoUsuario } from "@/lib/vinculos";
 
 export interface LoginState {
   error?: string;
@@ -25,7 +26,7 @@ export async function signIn(_prev: LoginState, formData: FormData): Promise<Log
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     // Mensagem genérica de propósito: não revela se o e-mail existe.
@@ -38,6 +39,11 @@ export async function signIn(_prev: LoginState, formData: FormData): Promise<Log
         : "Não foi possível entrar agora. Tente novamente em instantes.",
     };
   }
+
+  // Revalida no ADM antes de liberar a sessão — segundo canal de revogação
+  // (o principal é o evento do ADM, Fase 6), sem cache: toda vez que alguém
+  // loga, cada loja vinculada é reconferida.
+  await revalidarVinculosDoUsuario(data.user.id);
 
   revalidatePath("/", "layout");
   redirect(destino);
