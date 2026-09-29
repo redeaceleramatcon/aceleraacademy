@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -56,7 +57,15 @@ export default async function EquipePage() {
                       </p>
                       {m.nome && <p className="truncate text-xs text-muted">{m.email}</p>}
                     </div>
-                    {m.papel === "funcionario" && <RemoverButton vinculoId={m.vinculoId} />}
+                    <div className="flex shrink-0 items-center gap-3">
+                      <Link
+                        href={`/atividade/${m.userId}`}
+                        className="text-xs font-semibold text-brand-blue-light hover:underline"
+                      >
+                        Ver atividade
+                      </Link>
+                      {m.papel === "funcionario" && <RemoverButton vinculoId={m.vinculoId} />}
+                    </div>
                   </li>
                 ))}
               </ul>

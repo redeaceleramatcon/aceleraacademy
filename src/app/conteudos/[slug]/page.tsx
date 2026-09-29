@@ -8,6 +8,7 @@ import { TypeBadge } from "@/components/ui/Badge";
 import { ContentRow } from "@/components/home/ContentRow";
 import { ContentCard } from "@/components/home/ContentCard";
 import { ChevronRightIcon, PlayIcon } from "@/components/icons";
+import { YoutubePlayer } from "@/components/conteudo/YoutubePlayer";
 import { getContentBySlug, getRelatedContent } from "@/lib/data/content";
 
 export const revalidate = 60;
@@ -84,22 +85,40 @@ export default async function ConteudoDetailPage({
         <Container className="mt-8">
           <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
             <div>
-              <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-surface">
-                <Image
-                  src={item.image}
-                  alt=""
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 800px"
-                  className="scale-105 object-cover opacity-30 [filter:blur(2px)_saturate(0.9)]"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/75 to-background/55" />
-                <div className="relative flex flex-col items-center gap-3 text-center">
-                  <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/15 backdrop-blur-sm">
-                    <PlayIcon className="h-6 w-6 translate-x-0.5 text-white/90" />
-                  </span>
-                  <p className="text-sm text-white/70">Player em desenvolvimento</p>
+              {item.video?.provider === "youtube" ? (
+                <div className="aspect-video overflow-hidden rounded-2xl border border-white/10 bg-surface">
+                  {/*
+                    youtube-nocookie.com (modo privacy-enhanced) + modestbranding/rel/iv_load_policy
+                    reduzem ao máximo a marca do YouTube. O link "assistir no YouTube" do player não
+                    some — os Termos de Serviço do YouTube exigem isso em qualquer embed gratuito;
+                    removê-lo via CSS violaria os termos e arrisca o canal ser banido.
+                    YoutubePlayer usa a IFrame API (não um <iframe src> estático) pra gravar
+                    progresso e os eventos-chave de vídeo — ver src/components/conteudo/YoutubePlayer.tsx.
+                  */}
+                  <YoutubePlayer
+                    videoId={item.video.providerVideoId}
+                    contentId={item.uuid}
+                    title={item.title}
+                  />
                 </div>
-              </div>
+              ) : (
+                <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-surface">
+                  <Image
+                    src={item.image}
+                    alt=""
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 800px"
+                    className="scale-105 object-cover opacity-30 [filter:blur(2px)_saturate(0.9)]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/75 to-background/55" />
+                  <div className="relative flex flex-col items-center gap-3 text-center">
+                    <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/15 backdrop-blur-sm">
+                      <PlayIcon className="h-6 w-6 translate-x-0.5 text-white/90" />
+                    </span>
+                    <p className="text-sm text-white/70">Player em desenvolvimento</p>
+                  </div>
+                </div>
+              )}
 
               <h2 className="mt-8 text-xl font-bold tracking-tight text-foreground">
                 Sobre este conteúdo
