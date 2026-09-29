@@ -5,7 +5,9 @@ import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { UserIcon } from "@/components/icons";
 import { getSessionProfile, displayName } from "@/lib/auth";
+import { ehAdmin } from "@/lib/atividade";
 import { signOut } from "@/app/login/actions";
+import { TrocarSenhaForm } from "./TrocarSenhaForm";
 
 /**
  * Área do associado — exige sessão e pelo menos um vínculo ativo.
@@ -24,8 +26,11 @@ export default async function MinhaAreaPage() {
 
   const nome = displayName(profile);
   const ehMaster = profile.vinculos.some((v) => v.papel === "master");
+  const admin = await ehAdmin(profile.id);
 
-  if (profile.vinculos.length === 0) {
+  // Admin sem nenhum vínculo (só existe em academy_admins) ainda tem motivo
+  // legítimo de estar logado — não cai na tela de "sem acesso".
+  if (profile.vinculos.length === 0 && !admin) {
     return (
       <>
         <Header />
@@ -100,6 +105,14 @@ export default async function MinhaAreaPage() {
             </div>
 
             <div className="flex items-center gap-3">
+              {admin && (
+                <Link
+                  href="/admin"
+                  className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-white/30 hover:bg-white/10"
+                >
+                  Painel admin
+                </Link>
+              )}
               {ehMaster && (
                 <Link
                   href="/equipe"
@@ -142,6 +155,16 @@ export default async function MinhaAreaPage() {
             >
               Explorar conteúdos
             </Link>
+          </div>
+
+          <h2 className="mt-12 text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+            Segurança
+          </h2>
+          <div className="mt-4 rounded-2xl border border-white/10 bg-surface p-6">
+            <p className="text-sm text-muted">
+              Troque sua senha a qualquer momento — não precisa da senha antiga, só estar logado.
+            </p>
+            <TrocarSenhaForm />
           </div>
         </Container>
       </main>
