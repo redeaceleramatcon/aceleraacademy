@@ -12,8 +12,9 @@ import { createClient } from "@/lib/supabase/server";
  * ao Supabase, em vez de confiar no cookie recebido do navegador.
  */
 export interface SessionVinculo {
-  lojaCnpj: string;
-  papel: "master" | "funcionario";
+  /** Nulo para vínculo interno (criado pelo admin, sem loja nenhuma por trás). */
+  lojaCnpj: string | null;
+  papel: "master" | "funcionario" | "interno";
 }
 
 export interface SessionProfile {

@@ -17,7 +17,12 @@ export default async function EquipePage() {
   const profile = await getSessionProfile();
   if (!profile) redirect("/login?redirect=/equipe");
 
-  const lojasMaster = profile.vinculos.filter((v) => v.papel === "master").map((v) => v.lojaCnpj);
+  // master sempre tem loja_cnpj (a constraint do banco garante isso) — o filtro
+  // final só existe pra provar isso pro TypeScript, que não sabe da constraint.
+  const lojasMaster = profile.vinculos
+    .filter((v) => v.papel === "master")
+    .map((v) => v.lojaCnpj)
+    .filter((cnpj): cnpj is string => cnpj !== null);
   if (lojasMaster.length === 0) redirect("/minha-area");
 
   const equipesPorLoja = await Promise.all(

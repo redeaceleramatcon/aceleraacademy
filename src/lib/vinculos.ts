@@ -240,7 +240,9 @@ export async function revalidarVinculosDoUsuario(userId: string): Promise<void> 
   }
   if (!vinculos?.length) return;
 
-  const lojasUnicas = [...new Set(vinculos.map((v) => v.loja_cnpj))];
+  // Vínculo interno (loja_cnpj nulo) não tem CNPJ pra perguntar ao ADM — só
+  // sai do ar se um admin revogar na mão.
+  const lojasUnicas = [...new Set(vinculos.map((v) => v.loja_cnpj).filter((cnpj): cnpj is string => !!cnpj))];
 
   await Promise.all(
     lojasUnicas.map(async (lojaCnpj) => {
@@ -249,4 +251,84 @@ export async function revalidarVinculosDoUsuario(userId: string): Promise<void> 
       if (!verificacao.ativo) await revogarVinculosDaLoja(lojaCnpj);
     }),
   );
+}
+
+/**
+ * Cria (ou vincula, se já tiver conta) um usuário interno — sem loja_cnpj,
+ * sem relação nenhuma com o ADM. Só quem já passou por ehAdmin() deve chamar
+ * isto; a função em si não reconfere autorização. Mesmo mecanismo de convite
+ * de convidarFuncionario, só que sem CNPJ.
+ */
+export async function convidarInterno(
+  nome: string,
+  email: string,
+  criadoPor: string,
+): Promise<{ novoConvite: boolean }> {
+  const supabase = createServiceClient();
+
+  const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
+    data: nome ? { full_name: nome } : undefined,
+  });
+
+  let userId: string;
+  let novoConvite = true;
+
+  if (inviteError) {
+    const jaExiste =
+      inviteError.message.toLowerCase().includes("already") ||
+      inviteError.message.toLowerCase().includes("registered");
+    if (!jaExiste) {
+      console.error("Falha ao convidar interno:", inviteError.message);
+      throw inviteError;
+    }
+
+    novoConvite = false;
+    const { data: usersPage, error: listError } = await supabase.auth.admin.listUsers({ perPage: 200 });
+    if (listError) throw listError;
+    const existente = usersPage.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+    if (!existente) throw new Error("Não encontramos a conta existente desse e-mail. Tente novamente.");
+    userId = existente.id;
+  } else {
+    userId = inviteData.user.id;
+  }
+
+  const { error: vinculoError } = await supabase.from("academy_vinculos").insert({
+    user_id: userId,
+    loja_cnpj: null,
+    papel: "interno",
+    status: "ativo",
+    origem: "cadastrado_por_admin",
+    criado_por: criadoPor,
+  });
+
+  if (vinculoError) {
+    if (vinculoError.code === "23505") {
+      throw new Error("Essa pessoa já tem um vínculo interno ativo.");
+    }
+    console.error("Falha ao criar vínculo interno:", vinculoError.message);
+    throw vinculoError;
+  }
+
+  return { novoConvite };
+}
+
+/** Revoga um vínculo interno. Só mexe em papel='interno' — nunca em master/funcionario. */
+export async function revogarVinculoInterno(vinculoId: string, revogadoPor: string) {
+  const supabase = createServiceClient();
+  const { error } = await supabase
+    .from("academy_vinculos")
+    .update({
+      status: "revogado",
+      revogado_em: new Date().toISOString(),
+      revogado_por: revogadoPor,
+      revogado_motivo: "manual",
+    })
+    .eq("id", vinculoId)
+    .eq("papel", "interno")
+    .eq("status", "ativo");
+
+  if (error) {
+    console.error("Falha ao revogar vínculo interno:", error.message);
+    throw error;
+  }
 }
