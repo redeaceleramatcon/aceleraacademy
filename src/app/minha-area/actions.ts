@@ -34,6 +34,26 @@ export async function trocarSenha(
   const { error } = await supabase.auth.updateUser({ password: novaSenha });
 
   if (error) {
+    // Loga o erro real do Supabase pro Vercel (nunca aparece pro usuário) —
+    // a mensagem genérica abaixo é só o fallback quando não reconhecemos o caso.
+    console.error("trocarSenha: falha no supabase.auth.updateUser", error);
+
+    if (error.message.toLowerCase().includes("different from the old password")) {
+      return { error: "A nova senha precisa ser diferente da senha atual." };
+    }
+    if (error.message.toLowerCase().includes("should be at least")) {
+      return { error: "A senha é muito curta para os critérios de segurança configurados." };
+    }
+    if (
+      error.message.toLowerCase().includes("weak") ||
+      error.message.toLowerCase().includes("easy to guess")
+    ) {
+      return { error: "Essa senha é considerada fraca. Escolha uma senha mais forte." };
+    }
+    if (error.message.toLowerCase().includes("security purposes")) {
+      return { error: "Muitas tentativas seguidas. Aguarde um minuto e tente de novo." };
+    }
+
     return { error: "Não foi possível trocar a senha agora. Tente novamente." };
   }
 
