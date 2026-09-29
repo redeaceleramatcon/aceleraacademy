@@ -3,6 +3,17 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { verificarCnpjNoAdm } from "@/lib/adm";
 
 /**
+ * Pra onde o link do e-mail de convite manda a pessoa depois que o Supabase
+ * confirma o token — precisa ser uma URL cadastrada em Authentication > URL
+ * Configuration > Redirect URLs no painel do Supabase, senão ele ignora isto
+ * e cai no Site URL padrão (branco, sem nenhuma tela pra definir senha).
+ */
+function urlConvite(): string {
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  return `${base.replace(/\/$/, "")}/convite`;
+}
+
+/**
  * Registra o usuário recém-criado como master do CNPJ, sem aprovação de
  * ninguém — só é chamada depois que o e-mail já bateu com o e-mail do
  * associado devolvido pelo ADM (ver src/app/cadastro/actions.ts).
@@ -126,6 +137,7 @@ export async function convidarFuncionario(
 
   const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
     data: nome ? { full_name: nome } : undefined,
+    redirectTo: urlConvite(),
   });
 
   let userId: string;
@@ -268,6 +280,7 @@ export async function convidarInterno(
 
   const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
     data: nome ? { full_name: nome } : undefined,
+    redirectTo: urlConvite(),
   });
 
   let userId: string;
