@@ -4,15 +4,16 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { getSessionUser } from "@/lib/auth";
-import { ehAdmin } from "@/lib/atividade";
+import { ehAdmin, podePublicarConteudo } from "@/lib/atividade";
 import { listarCategoriasAdmin, listarMentoresAdmin } from "@/lib/conteudo";
 import { NovoConteudoForm } from "./NovoConteudoForm";
 
-/** Cadastro de vídeo — só Admin. Hoje só cobre vídeo avulso do YouTube. */
+/** Cadastro de vídeo — admin ou editor. Hoje só cobre vídeo avulso do YouTube. */
 export default async function NovoConteudoPage() {
   const user = await getSessionUser();
   if (!user) redirect("/login?redirect=/admin/conteudos/novo");
-  if (!(await ehAdmin(user.id))) redirect("/minha-area");
+  if (!(await podePublicarConteudo(user.id))) redirect("/minha-area");
+  const admin = await ehAdmin(user.id);
 
   const [categorias, mentores] = await Promise.all([listarCategoriasAdmin(), listarMentoresAdmin()]);
 
@@ -21,8 +22,11 @@ export default async function NovoConteudoPage() {
       <Header />
       <main className="pt-24 sm:pt-28">
         <Container className="pb-16 pt-2 sm:pt-4">
-          <Link href="/admin" className="text-xs font-semibold text-brand-blue-light hover:underline">
-            ← Voltar para o painel admin
+          <Link
+            href={admin ? "/admin" : "/minha-area"}
+            className="text-xs font-semibold text-brand-blue-light hover:underline"
+          >
+            {admin ? "← Voltar para o painel admin" : "← Voltar para Minha área"}
           </Link>
 
           <h1 className="mt-3 text-xl font-bold text-foreground sm:text-2xl">Novo conteúdo</h1>

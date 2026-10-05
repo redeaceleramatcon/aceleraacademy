@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSessionUser } from "@/lib/auth";
-import { ehAdmin } from "@/lib/atividade";
+import { podePublicarConteudo } from "@/lib/atividade";
 import { criarConteudoYoutube, type NovoConteudoInput } from "@/lib/conteudo";
 
 export interface NovoConteudoState {
@@ -26,7 +26,7 @@ export async function criarConteudo(
 ): Promise<NovoConteudoState> {
   const user = await getSessionUser();
   if (!user) return { error: "Sua sessão expirou. Entre novamente." };
-  if (!(await ehAdmin(user.id))) return { error: "Você não tem acesso a esta área." };
+  if (!(await podePublicarConteudo(user.id))) return { error: "Você não tem acesso a esta área." };
 
   const youtubeUrl = String(formData.get("youtube_url") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();

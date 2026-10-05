@@ -18,6 +18,18 @@ export async function ehAdmin(userId: string): Promise<boolean> {
   return !!data;
 }
 
+export async function ehEditor(userId: string): Promise<boolean> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("academy_editores").select("user_id").eq("user_id", userId).maybeSingle();
+  return !!data;
+}
+
+/** Quem pode cadastrar conteúdo: admin da rede ou editor. */
+export async function podePublicarConteudo(userId: string): Promise<boolean> {
+  const [admin, editor] = await Promise.all([ehAdmin(userId), ehEditor(userId)]);
+  return admin || editor;
+}
+
 export interface ProgressoConteudo {
   contentId: string;
   titulo: string;

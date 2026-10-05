@@ -5,7 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { UserIcon } from "@/components/icons";
 import { getSessionProfile, displayName } from "@/lib/auth";
-import { ehAdmin } from "@/lib/atividade";
+import { ehAdmin, ehEditor } from "@/lib/atividade";
 import { signOut } from "@/app/login/actions";
 import { TrocarSenhaForm } from "./TrocarSenhaForm";
 
@@ -26,11 +26,11 @@ export default async function MinhaAreaPage() {
 
   const nome = displayName(profile);
   const ehMaster = profile.vinculos.some((v) => v.papel === "master");
-  const admin = await ehAdmin(profile.id);
+  const [admin, editor] = await Promise.all([ehAdmin(profile.id), ehEditor(profile.id)]);
 
-  // Admin sem nenhum vínculo (só existe em academy_admins) ainda tem motivo
-  // legítimo de estar logado — não cai na tela de "sem acesso".
-  if (profile.vinculos.length === 0 && !admin) {
+  // Admin/editor sem nenhum vínculo (só existe em academy_admins/editores)
+  // ainda tem motivo legítimo de estar logado — não cai na tela de "sem acesso".
+  if (profile.vinculos.length === 0 && !admin && !editor) {
     return (
       <>
         <Header />
@@ -105,6 +105,14 @@ export default async function MinhaAreaPage() {
             </div>
 
             <div className="flex items-center gap-3">
+              {(admin || editor) && (
+                <Link
+                  href="/admin/conteudos/novo"
+                  className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-white/30 hover:bg-white/10"
+                >
+                  Novo conteúdo
+                </Link>
+              )}
               {admin && (
                 <Link
                   href="/admin"
