@@ -2,6 +2,8 @@
 
 import { useActionState } from "react";
 import { signIn, type LoginState } from "./actions";
+import { FormFeedback } from "@/components/motion/FormFeedback";
+import { Spinner } from "@/components/ui/Spinner";
 
 const inputClass =
   "w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/35 transition-colors focus:border-brand-blue-light/60 focus:outline-none";
@@ -46,21 +48,20 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
         />
       </div>
 
-      {state.error && (
-        <p
-          role="alert"
-          className="rounded-lg border border-brand-orange/30 bg-brand-orange/10 px-4 py-3 text-sm text-brand-orange-light"
-        >
-          {state.error}
-        </p>
-      )}
+      <FormFeedback error={state.error} />
 
       <button
         type="submit"
         disabled={pending}
         className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-orange px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-orange/20 transition-all hover:bg-brand-orange-light hover:shadow-brand-orange/30 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {pending ? "Entrando..." : "Entrar"}
+        {pending ? (
+          <>
+            <Spinner /> Entrando...
+          </>
+        ) : (
+          "Entrar"
+        )}
       </button>
     </form>
   );

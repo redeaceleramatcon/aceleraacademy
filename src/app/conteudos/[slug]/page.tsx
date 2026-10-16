@@ -7,9 +7,16 @@ import { Container } from "@/components/ui/Container";
 import { TypeBadge } from "@/components/ui/Badge";
 import { ContentRow } from "@/components/home/ContentRow";
 import { ContentCard } from "@/components/home/ContentCard";
+import { HeroFade, WordReveal } from "@/components/motion/HeroMotion";
+import { HeroBackground } from "@/components/motion/HeroBackground";
+import { AccordionItem } from "@/components/motion/Accordion";
+import { CopyLinkButton } from "@/components/conteudo/CopyLinkButton";
+import { Reveal } from "@/components/motion/Reveal";
 import { ChevronRightIcon, PlayIcon } from "@/components/icons";
 import { YoutubePlayer } from "@/components/conteudo/YoutubePlayer";
+import { getSessionUser } from "@/lib/auth";
 import { getContentBySlug, getRelatedContent } from "@/lib/data/content";
+import { progressoDoConteudo } from "@/lib/meu-progresso";
 
 export const revalidate = 60;
 
@@ -40,7 +47,10 @@ export default async function ConteudoDetailPage({
   const item = await getContentBySlug(slug);
   if (!item) notFound();
 
-  const related = await getRelatedContent(item.category, item.slug);
+  const [related, user] = await Promise.all([getRelatedContent(item.category, item.slug), getSessionUser()]);
+  // Onde o aluno parou (só se ainda não concluiu): o player abre direto nesse ponto.
+  const andamento = user ? await progressoDoConteudo(user.id, item.uuid) : null;
+  const retomarDe = andamento && !andamento.completo && andamento.percent < 95 ? andamento.posicaoSegundos : 0;
   const meta = [item.mentor, item.duration, item.categoryName].filter(Boolean);
   const totalLessons = item.modules.reduce((total, module) => total + module.lessons.length, 0);
 
@@ -48,24 +58,18 @@ export default async function ConteudoDetailPage({
     <>
       <Header />
       <main className="pb-16">
-        <section className="relative h-[56vh] min-h-[380px] w-full overflow-hidden sm:h-[64vh]">
-          <Image
-            src={item.image}
-            alt={item.title}
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover [filter:saturate(0.92)_contrast(1.04)_brightness(0.96)]"
-          />
-          <div className="absolute inset-0 bg-brand-blue-dark/10 mix-blend-multiply" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background from-5% via-brand-blue-dark/50 via-35% to-transparent to-80%" />
-          <div className="absolute inset-0 bg-gradient-to-r from-brand-blue-dark/70 via-transparent to-transparent" />
+        <section className="relative h-[44vh] min-h-[340px] w-full overflow-hidden sm:h-[50vh]">
+          <HeroBackground />
           <Container className="relative flex h-full flex-col justify-end pb-10 pt-28">
-            <TypeBadge type={item.type} className="w-fit" />
-            <h1 className="mt-4 max-w-2xl text-3xl font-bold tracking-tight text-white text-balance sm:text-4xl lg:text-5xl">
-              {item.title}
-            </h1>
-            <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/60">
+            <HeroFade delay={0.1}>
+              <TypeBadge type={item.type} className="w-fit" />
+            </HeroFade>
+            <WordReveal
+              text={item.title}
+              delay={0.2}
+              className="mt-4 max-w-2xl text-3xl font-bold tracking-tight text-white text-balance sm:text-4xl lg:text-5xl"
+            />
+            <HeroFade delay={0.6} className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/60">
               {meta.map((value, index) => (
                 <span key={value} className="flex items-center gap-x-3">
                   {index > 0 && <span className="h-1 w-1 rounded-full bg-white/30" />}
@@ -78,7 +82,7 @@ export default async function ConteudoDetailPage({
                   <span>Parceria com {item.partner}</span>
                 </>
               )}
-            </div>
+            </HeroFade>
           </Container>
         </section>
 
@@ -86,7 +90,7 @@ export default async function ConteudoDetailPage({
           <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
             <div>
               {item.video?.provider === "youtube" ? (
-                <div className="aspect-video overflow-hidden rounded-2xl border border-white/10 bg-surface">
+                <Reveal className="aspect-video overflow-hidden rounded-2xl border border-white/10 bg-surface shadow-elevated" y={30}>
                   {/*
                     youtube-nocookie.com (modo privacy-enhanced) + modestbranding/rel/iv_load_policy
                     reduzem ao máximo a marca do YouTube. O link "assistir no YouTube" do player não
@@ -99,8 +103,9 @@ export default async function ConteudoDetailPage({
                     videoId={item.video.providerVideoId}
                     contentId={item.uuid}
                     title={item.title}
+                    retomarDe={retomarDe}
                   />
-                </div>
+                </Reveal>
               ) : (
                 <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-surface">
                   <Image
@@ -140,24 +145,30 @@ export default async function ConteudoDetailPage({
 
                   <div className="mt-5 space-y-4">
                     {item.modules.map((module, moduleIndex) => (
-                      <div
+                      <Reveal
                         key={module.title}
+                        delay={moduleIndex * 0.06}
                         className="overflow-hidden rounded-2xl bg-surface ring-1 ring-white/5"
                       >
-                        <div className="px-5 pb-4 pt-5">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-orange-light">
-                            Módulo {moduleIndex + 1}
-                          </p>
-                          <p className="mt-1.5 text-base font-semibold text-foreground">
-                            {module.title}
-                          </p>
-                          {module.description && (
-                            <p className="mt-1 text-sm leading-relaxed text-muted">
-                              {module.description}
-                            </p>
-                          )}
-                        </div>
-
+                        <AccordionItem
+                          defaultOpen={moduleIndex === 0}
+                          header={
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-orange-light">
+                                Módulo {moduleIndex + 1} · {module.lessons.length}{" "}
+                                {module.lessons.length === 1 ? "aula" : "aulas"}
+                              </p>
+                              <p className="mt-1.5 text-base font-semibold text-foreground">
+                                {module.title}
+                              </p>
+                              {module.description && (
+                                <p className="mt-1 text-sm leading-relaxed text-muted">
+                                  {module.description}
+                                </p>
+                              )}
+                            </div>
+                          }
+                        >
                         {module.lessons.length > 0 && (
                           <ul className="border-t border-white/5">
                             {module.lessons.map((lesson, lessonIndex) => (
@@ -185,14 +196,16 @@ export default async function ConteudoDetailPage({
                             ))}
                           </ul>
                         )}
-                      </div>
+                        </AccordionItem>
+                      </Reveal>
                     ))}
                   </div>
                 </>
               )}
             </div>
 
-            <aside className="h-fit rounded-2xl border border-white/10 bg-surface p-5">
+            <Reveal delay={0.15} className="h-fit lg:sticky lg:top-28">
+            <aside className="rounded-2xl border border-white/10 bg-surface p-5">
               {item.mentors.length > 0 && (
                 <>
                   <p className="text-xs uppercase tracking-wide text-subtle">
@@ -260,7 +273,11 @@ export default async function ConteudoDetailPage({
                   </ul>
                 </>
               )}
+
+              <div className="my-4 border-t border-white/10" />
+              <CopyLinkButton />
             </aside>
+            </Reveal>
           </div>
         </Container>
 

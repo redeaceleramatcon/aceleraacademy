@@ -8,14 +8,14 @@ export default function Loading() {
   return (
     <main className="pt-24 sm:pt-28" aria-busy="true" aria-label="Carregando conteúdos">
       <Container className="pb-10 pt-2 sm:pt-4">
-        <div className="h-8 w-56 animate-pulse rounded-lg bg-white/5" />
-        <div className="mt-3 h-4 w-32 animate-pulse rounded bg-white/5" />
+        <div className="shimmer h-8 w-56 rounded-lg bg-white/5" />
+        <div className="shimmer mt-3 h-4 w-32 rounded bg-white/5" />
 
         <div className="mt-6 flex gap-2.5 overflow-hidden">
           {Array.from({ length: 6 }).map((_, index) => (
             <div
               key={index}
-              className="h-9 w-28 flex-shrink-0 animate-pulse rounded-full bg-white/5"
+              className="shimmer h-9 w-28 flex-shrink-0 rounded-full bg-white/5"
             />
           ))}
         </div>
@@ -24,7 +24,7 @@ export default function Loading() {
           {Array.from({ length: 10 }).map((_, index) => (
             <div
               key={index}
-              className="aspect-video animate-pulse rounded-xl bg-surface ring-1 ring-white/5"
+              className="shimmer aspect-video rounded-xl bg-surface ring-1 ring-white/5"
             />
           ))}
         </div>

@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { convidarMembroInterno, type ConvidarInternoState } from "./actions";
+import { FormFeedback } from "@/components/motion/FormFeedback";
 
 const inputClass =
   "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/35 transition-colors focus:border-brand-blue-light/60 focus:outline-none";
@@ -45,12 +46,7 @@ export function ConvidarInternoForm() {
         {pending ? "Convidando..." : "Convidar"}
       </button>
 
-      {state.error && (
-        <p role="alert" className="basis-full text-xs text-brand-orange-light">
-          {state.error}
-        </p>
-      )}
-      {state.aviso && <p className="basis-full text-xs text-brand-blue-light">{state.aviso}</p>}
+      <FormFeedback error={state.error} aviso={state.aviso} className="basis-full" />
     </form>
   );
 }

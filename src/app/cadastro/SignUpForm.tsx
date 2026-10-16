@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { useState } from "react";
 import { signUp, type SignUpState } from "./actions";
+import { FormFeedback } from "@/components/motion/FormFeedback";
+import { PasswordStrength } from "@/components/motion/PasswordStrength";
+import { SuccessCheck } from "@/components/motion/SuccessCheck";
+import { Spinner } from "@/components/ui/Spinner";
 
 const inputClass =
   "w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/35 transition-colors focus:border-brand-blue-light/60 focus:outline-none";
@@ -11,13 +16,13 @@ const labelClass = "mb-1.5 block text-xs uppercase tracking-wide text-subtle";
 
 export function SignUpForm() {
   const [state, formAction, pending] = useActionState<SignUpState, FormData>(signUp, {});
+  const [senha, setSenha] = useState("");
 
   if (state.aviso) {
     return (
-      <div className="mt-8">
-        <p className="rounded-lg border border-brand-blue-light/30 bg-brand-blue-light/10 px-4 py-3 text-sm text-brand-blue-light">
-          {state.aviso}
-        </p>
+      <div className="mt-8 flex flex-col items-center text-center">
+        <SuccessCheck />
+        <FormFeedback aviso={state.aviso} className="mt-4" toastDoAviso={false} />
         <Link
           href="/login"
           className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-brand-blue-light/60 hover:bg-brand-blue-light/10"
@@ -87,25 +92,27 @@ export function SignUpForm() {
           required
           minLength={8}
           placeholder="Mínimo de 8 caracteres"
+          value={senha}
+          onChange={(e) => setSenha(e.target.value)}
           className={inputClass}
         />
+        <PasswordStrength senha={senha} />
       </div>
 
-      {state.error && (
-        <p
-          role="alert"
-          className="rounded-lg border border-brand-orange/30 bg-brand-orange/10 px-4 py-3 text-sm text-brand-orange-light"
-        >
-          {state.error}
-        </p>
-      )}
+      <FormFeedback error={state.error} />
 
       <button
         type="submit"
         disabled={pending}
         className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-orange px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-orange/20 transition-all hover:bg-brand-orange-light hover:shadow-brand-orange/30 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {pending ? "Validando cadastro..." : "Criar conta"}
+        {pending ? (
+          <>
+            <Spinner /> Validando cadastro...
+          </>
+        ) : (
+          "Criar conta"
+        )}
       </button>
     </form>
   );

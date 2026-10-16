@@ -4,6 +4,10 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { FormFeedback } from "@/components/motion/FormFeedback";
+import { PasswordStrength } from "@/components/motion/PasswordStrength";
+import { SuccessCheck } from "@/components/motion/SuccessCheck";
+import { Spinner } from "@/components/ui/Spinner";
 
 type Estado = "verificando" | "pronto" | "salvando" | "sucesso" | "erro";
 
@@ -25,35 +29,38 @@ export function DefinirSenhaForm() {
   const [confirmacao, setConfirmacao] = useState("");
 
   useEffect(() => {
-    const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : "";
-    const params = new URLSearchParams(hash);
+    (async () => {
+      await Promise.resolve(); // o estado só muda depois de um tick: não dentro do corpo do efeito
+      const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : "";
+      const params = new URLSearchParams(hash);
 
-    const descricaoErro = params.get("error_description");
-    if (descricaoErro) {
-      setErro("Esse link expirou ou já foi usado. Peça um novo convite a quem te chamou pra Academy.");
-      setEstado("erro");
-      return;
-    }
-
-    const accessToken = params.get("access_token");
-    const refreshToken = params.get("refresh_token");
-    if (!accessToken || !refreshToken) {
-      setErro("Link inválido ou incompleto. Peça um novo convite a quem te chamou pra Academy.");
-      setEstado("erro");
-      return;
-    }
-
-    const supabase = createClient();
-    supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(({ error }) => {
-      if (error) {
-        setErro("Esse link expirou ou já foi usado. Peça um novo convite.");
+      const descricaoErro = params.get("error_description");
+      if (descricaoErro) {
+        setErro("Esse link expirou ou já foi usado. Peça um novo convite a quem te chamou pra Academy.");
         setEstado("erro");
         return;
       }
-      // Tira o token da barra de endereço — já cumpriu o papel dele.
-      window.history.replaceState(null, "", window.location.pathname);
-      setEstado("pronto");
-    });
+
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      if (!accessToken || !refreshToken) {
+        setErro("Link inválido ou incompleto. Peça um novo convite a quem te chamou pra Academy.");
+        setEstado("erro");
+        return;
+      }
+
+      const supabase = createClient();
+      supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(({ error }) => {
+        if (error) {
+          setErro("Esse link expirou ou já foi usado. Peça um novo convite.");
+          setEstado("erro");
+          return;
+        }
+        // Tira o token da barra de endereço — já cumpriu o papel dele.
+        window.history.replaceState(null, "", window.location.pathname);
+        setEstado("pronto");
+      });
+    })();
   }, []);
 
   async function handleSubmit(e: FormEvent) {
@@ -83,7 +90,11 @@ export function DefinirSenhaForm() {
   }
 
   if (estado === "verificando") {
-    return <p className="mt-6 text-sm text-muted">Confirmando seu convite...</p>;
+    return (
+      <p className="mt-6 flex items-center gap-3 text-sm text-muted">
+        <Spinner className="border-white/20 border-t-brand-orange" /> Confirmando seu convite...
+      </p>
+    );
   }
 
   if (estado === "erro") {
@@ -98,7 +109,12 @@ export function DefinirSenhaForm() {
   }
 
   if (estado === "sucesso") {
-    return <p className="mt-6 text-sm text-brand-blue-light">Senha definida! Entrando na Academy...</p>;
+    return (
+      <div className="mt-6 flex flex-col items-center gap-3 text-center">
+        <SuccessCheck />
+        <p className="text-sm text-brand-blue-light">Senha definida! Entrando na Academy...</p>
+      </div>
+    );
   }
 
   return (
@@ -117,6 +133,7 @@ export function DefinirSenhaForm() {
           onChange={(e) => setSenha(e.target.value)}
           className={inputClass}
         />
+        <PasswordStrength senha={senha} />
       </div>
 
       <div>
@@ -139,14 +156,16 @@ export function DefinirSenhaForm() {
         disabled={estado === "salvando"}
         className="rounded-lg bg-brand-orange px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-light disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {estado === "salvando" ? "Salvando..." : "Entrar na Academy"}
+        {estado === "salvando" ? (
+          <span className="flex items-center justify-center gap-2">
+            <Spinner /> Salvando...
+          </span>
+        ) : (
+          "Entrar na Academy"
+        )}
       </button>
 
-      {erro && (
-        <p role="alert" className="text-xs text-brand-orange-light">
-          {erro}
-        </p>
-      )}
+      <FormFeedback error={erro || undefined} />
     </form>
   );
 }

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
+import { Reveal } from "@/components/motion/Reveal";
 import { getSessionProfile } from "@/lib/auth";
 import { listarEquipe } from "@/lib/vinculos";
 import { ConvidarForm } from "./ConvidarForm";
@@ -41,7 +42,7 @@ export default async function EquipePage() {
           </p>
 
           {equipesPorLoja.map(({ cnpj, membros }) => (
-            <div key={cnpj} className="mt-8 rounded-2xl border border-white/10 bg-surface p-6">
+            <Reveal key={cnpj} className="mt-8 rounded-2xl border border-white/10 bg-surface p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-subtle">
                 CNPJ {cnpj}
               </p>
@@ -74,7 +75,7 @@ export default async function EquipePage() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Reveal>
           ))}
         </Container>
       </main>

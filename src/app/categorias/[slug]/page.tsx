@@ -4,6 +4,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { CategoryFilter } from "@/components/home/CategoryFilter";
 import { ContentCard } from "@/components/home/ContentCard";
+import { Stagger } from "@/components/motion/Reveal";
 import { getCategoryBySlug, getContentsByCategory } from "@/lib/data/content";
 
 export const revalidate = 60;
@@ -38,11 +39,11 @@ export default async function CategoriaPage({
             <CategoryFilter activeSlug={slug} />
           </div>
 
-          <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5">
+          <Stagger stagger={0.05} className="fila-cards mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5">
             {items.map((item) => (
               <ContentCard key={item.slug} item={item} />
             ))}
-          </div>
+          </Stagger>
 
           {items.length === 0 && (
             <p className="mt-16 text-center text-sm text-muted">

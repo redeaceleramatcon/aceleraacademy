@@ -2,6 +2,10 @@ import { notFound, redirect } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
+import { ActivityBars } from "@/components/motion/ActivityBars";
+import { AnimatedBar } from "@/components/motion/AnimatedBar";
+import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion/Reveal";
 import { getSessionUser } from "@/lib/auth";
 import { buscarAtividade } from "@/lib/atividade";
 
@@ -33,7 +37,6 @@ export default async function AtividadePage({
 
   const horas = Math.floor(atividade.tempoUsoMinutos / 60);
   const minutos = atividade.tempoUsoMinutos % 60;
-  const tempoFormatado = horas > 0 ? `${horas}h ${minutos}min` : `${minutos} min`;
 
   return (
     <>
@@ -45,39 +48,57 @@ export default async function AtividadePage({
           </h1>
           <p className="mt-1 text-sm text-muted">{atividade.email}</p>
 
-          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
-            <div className="border-l-2 border-brand-blue-light pl-4">
-              <p className="text-3xl font-bold tracking-tight text-foreground">{tempoFormatado}</p>
-              <p className="mt-1.5 text-xs uppercase tracking-wide text-subtle">Tempo de uso (estimado)</p>
-            </div>
-            <div className="border-l-2 border-brand-blue-light pl-4">
+          <Stagger stagger={0.1} className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
+            <StaggerItem className="border-l-2 border-brand-blue-light pl-4">
               <p className="text-3xl font-bold tracking-tight text-foreground">
-                {atividade.progresso.filter((p) => p.completo).length}/{atividade.progresso.length}
+                {horas > 0 && (
+                  <>
+                    <AnimatedNumber value={horas} suffix="h " />
+                  </>
+                )}
+                <AnimatedNumber value={minutos} suffix={horas > 0 ? "min" : " min"} />
+              </p>
+              <p className="mt-1.5 text-xs uppercase tracking-wide text-subtle">Tempo de uso (estimado)</p>
+            </StaggerItem>
+            <StaggerItem className="border-l-2 border-brand-blue-light pl-4">
+              <p className="text-3xl font-bold tracking-tight text-foreground">
+                <AnimatedNumber value={atividade.progresso.filter((p) => p.completo).length} />/
+                {atividade.progresso.length}
               </p>
               <p className="mt-1.5 text-xs uppercase tracking-wide text-subtle">Conteúdos concluídos</p>
-            </div>
-            <div className="border-l-2 border-brand-blue-light pl-4">
+            </StaggerItem>
+            <StaggerItem className="border-l-2 border-brand-blue-light pl-4">
               <p className="text-3xl font-bold tracking-tight text-foreground">
                 {atividade.ultimoAcesso
                   ? new Date(atividade.ultimoAcesso).toLocaleDateString("pt-BR")
                   : "—"}
               </p>
               <p className="mt-1.5 text-xs uppercase tracking-wide text-subtle">Último acesso</p>
-            </div>
-          </div>
+            </StaggerItem>
+          </Stagger>
+
+          <h2 className="mt-12 text-lg font-bold tracking-tight text-foreground">Atividade nos últimos 14 dias</h2>
+          <Reveal className="mt-4 rounded-2xl border border-white/10 bg-surface p-5">
+            <ActivityBars dados={atividade.porDia} />
+          </Reveal>
 
           <h2 className="mt-12 text-lg font-bold tracking-tight text-foreground">Progresso por conteúdo</h2>
           {atividade.progresso.length === 0 ? (
             <p className="mt-3 text-sm text-muted">Nenhum conteúdo assistido ainda.</p>
           ) : (
-            <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
+            <Reveal className="mt-4 overflow-hidden rounded-2xl border border-white/10">
               <table className="w-full text-sm">
                 <tbody className="divide-y divide-white/10">
                   {atividade.progresso.map((p) => (
                     <tr key={p.contentId}>
                       <td className="px-4 py-3 text-foreground">{p.titulo}</td>
-                      <td className="px-4 py-3 text-right text-muted">
-                        {p.completo ? "Concluído" : `${p.percent}%`}
+                      <td className="w-40 px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <AnimatedBar value={p.completo ? 100 : p.percent} className="flex-1" />
+                          <span className="w-16 text-right text-xs text-muted">
+                            {p.completo ? "Concluído" : `${p.percent}%`}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-right text-xs text-subtle">
                         {new Date(p.ultimoAcesso).toLocaleDateString("pt-BR")}
@@ -86,14 +107,14 @@ export default async function AtividadePage({
                   ))}
                 </tbody>
               </table>
-            </div>
+            </Reveal>
           )}
 
           <h2 className="mt-12 text-lg font-bold tracking-tight text-foreground">Últimos eventos</h2>
           {atividade.eventosRecentes.length === 0 ? (
             <p className="mt-3 text-sm text-muted">Nenhum evento registrado ainda.</p>
           ) : (
-            <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
+            <Reveal className="mt-4 overflow-hidden rounded-2xl border border-white/10">
               <table className="w-full text-sm">
                 <tbody className="divide-y divide-white/10">
                   {atividade.eventosRecentes.map((e, i) => (
@@ -107,7 +128,7 @@ export default async function AtividadePage({
                   ))}
                 </tbody>
               </table>
-            </div>
+            </Reveal>
           )}
         </Container>
       </main>

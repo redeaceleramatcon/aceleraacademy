@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
+import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
+import { Reveal } from "@/components/motion/Reveal";
 import { getSessionUser } from "@/lib/auth";
 import { ehAdmin } from "@/lib/atividade";
 import { listarTodosUsuarios, listarEquipeInterna } from "@/lib/admin";
@@ -32,8 +34,9 @@ export default async function AdminPage() {
             <div>
               <h1 className="text-xl font-bold text-foreground sm:text-2xl">Rede — atividade</h1>
               <p className="mt-2 text-sm text-muted">
-                {usuarios.length} conta{usuarios.length === 1 ? "" : "s"} ativa
-                {usuarios.length === 1 ? "" : "s"} em {porLoja.size} loja{porLoja.size === 1 ? "" : "s"}.
+                <AnimatedNumber value={usuarios.length} /> conta{usuarios.length === 1 ? "" : "s"} ativa
+                {usuarios.length === 1 ? "" : "s"} em <AnimatedNumber value={porLoja.size} /> loja
+                {porLoja.size === 1 ? "" : "s"}.
               </p>
             </div>
             <Link
@@ -44,7 +47,7 @@ export default async function AdminPage() {
             </Link>
           </div>
 
-          <div className="mt-8 rounded-2xl border border-white/10 bg-surface p-6">
+          <Reveal className="mt-8 rounded-2xl border border-white/10 bg-surface p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-subtle">
               Equipe interna (sem loja)
             </p>
@@ -74,10 +77,10 @@ export default async function AdminPage() {
                 </li>
               ))}
             </ul>
-          </div>
+          </Reveal>
 
           {[...porLoja.entries()].map(([cnpj, membros]) => (
-            <div key={cnpj} className="mt-8 rounded-2xl border border-white/10 bg-surface p-6">
+            <Reveal key={cnpj} className="mt-8 rounded-2xl border border-white/10 bg-surface p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-subtle">CNPJ {cnpj}</p>
               <ul className="mt-4 divide-y divide-white/10">
                 {membros.map((m) => (
@@ -100,7 +103,7 @@ export default async function AdminPage() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Reveal>
           ))}
         </Container>
       </main>

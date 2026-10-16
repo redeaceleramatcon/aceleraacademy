@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { RastreioAtividade } from "@/components/RastreioAtividade";
+import { BackToTop } from "@/components/motion/BackToTop";
+import { CursorGlow } from "@/components/motion/CursorGlow";
+import { MotionProvider } from "@/components/motion/MotionProvider";
+import { ScrollProgress } from "@/components/motion/ScrollProgress";
+import { Toaster } from "@/components/motion/toast";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,7 +31,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex min-h-full flex-col">
         <RastreioAtividade />
-        {children}
+        <MotionProvider>
+          <ScrollProgress />
+          <CursorGlow />
+          {children}
+          <Toaster />
+          <BackToTop />
+        </MotionProvider>
       </body>
     </html>
   );

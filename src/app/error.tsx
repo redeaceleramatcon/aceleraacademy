@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Container } from "@/components/ui/Container";
+import { HeroFade } from "@/components/motion/HeroMotion";
 
 /**
  * Falha ao carregar dados (Supabase fora do ar, rede, consulta inválida).
@@ -21,21 +22,30 @@ export default function Error({
   return (
     <main className="flex min-h-[70vh] items-center pt-24 sm:pt-28">
       <Container className="text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-orange-light">
-          Erro de carregamento
-        </p>
-        <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-          Não foi possível carregar os conteúdos
-        </h1>
-        <p className="mx-auto mt-3 max-w-md text-sm text-muted">
-          A conexão com a plataforma falhou. Tente novamente em instantes.
-        </p>
-        <button
-          onClick={() => retry()}
-          className="mt-8 inline-flex items-center gap-2 rounded-lg bg-brand-orange px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-orange/20 transition-all hover:bg-brand-orange-light hover:shadow-brand-orange/30"
-        >
-          Tentar novamente
-        </button>
+        <HeroFade>
+          <span className="mx-auto flex h-14 w-14 animate-[flutuar_3s_ease-in-out_infinite] items-center justify-center rounded-full bg-brand-orange/15 text-2xl font-bold text-brand-orange-light ring-1 ring-brand-orange/30">
+            !
+          </span>
+        </HeroFade>
+        <HeroFade delay={0.1}>
+          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-brand-orange-light">
+            Erro de carregamento
+          </p>
+          <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            Não foi possível carregar os conteúdos
+          </h1>
+          <p className="mx-auto mt-3 max-w-md text-sm text-muted">
+            A conexão com a plataforma falhou. Tente novamente em instantes.
+          </p>
+        </HeroFade>
+        <HeroFade delay={0.2} className="mt-8">
+          <button
+            onClick={() => retry()}
+            className="btn-shine inline-flex items-center gap-2 rounded-lg bg-brand-orange px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-orange/20 transition-all hover:bg-brand-orange-light hover:shadow-brand-orange/30"
+          >
+            Tentar novamente
+          </button>
+        </HeroFade>
       </Container>
     </main>
   );

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { TypeBadge } from "@/components/ui/Badge";
+import { TiltCard } from "@/components/motion/TiltCard";
 import { cn } from "@/lib/utils";
 import type { ContentItem } from "@/types/content";
 
@@ -9,13 +10,13 @@ export function LiveCard({ item, className }: { item: ContentItem; className?: s
 
   return (
     <Link href={`/conteudos/${item.slug}`} className={cn("group block", className)}>
-      <div className="relative aspect-video overflow-hidden rounded-xl ring-1 ring-white/5 transition-all duration-300 group-hover:-translate-y-1 group-hover:ring-white/10 group-hover:shadow-elevated">
+      <TiltCard className="relative aspect-video overflow-hidden rounded-xl ring-1 ring-white/5 transition-[box-shadow,--tw-ring-color] duration-300 hover:ring-white/10 hover:shadow-elevated">
         <Image
           src={item.image}
           alt={item.title}
           fill
           sizes="(max-width: 640px) 80vw, 320px"
-          className="object-cover [filter:saturate(0.92)_contrast(1.04)_brightness(0.96)] transition-transform duration-500 group-hover:scale-105"
+          className="card-img object-cover [filter:saturate(0.92)_contrast(1.04)_brightness(0.96)]"
         />
         <div className="absolute inset-0 bg-brand-blue-dark/15 mix-blend-multiply" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
@@ -30,7 +31,7 @@ export function LiveCard({ item, className }: { item: ContentItem; className?: s
           <p className="mt-1 line-clamp-2 text-sm font-semibold text-white">{item.title}</p>
           {meta && <p className="mt-1 text-xs text-white/60">{meta}</p>}
         </div>
-      </div>
+      </TiltCard>
     </Link>
   );
 }

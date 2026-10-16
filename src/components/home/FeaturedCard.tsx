@@ -2,25 +2,26 @@ import Image from "next/image";
 import Link from "next/link";
 import { TypeBadge } from "@/components/ui/Badge";
 import { PlayIcon } from "@/components/icons";
+import { TiltCard } from "@/components/motion/TiltCard";
 import { cn } from "@/lib/utils";
 import type { ContentItem } from "@/types/content";
 
 export function FeaturedCard({ item, className }: { item: ContentItem; className?: string }) {
   return (
     <Link href={`/conteudos/${item.slug}`} className={cn("group block", className)}>
-      <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-white/5 transition-all duration-300 group-hover:-translate-y-1 group-hover:ring-white/10 group-hover:shadow-elevated">
+      <TiltCard className="relative overflow-hidden rounded-2xl bg-surface ring-1 ring-white/5 transition-[box-shadow,--tw-ring-color] duration-300 hover:ring-white/10 hover:shadow-elevated">
         <div className="relative aspect-[16/10] overflow-hidden">
           <Image
             src={item.image}
             alt={item.title}
             fill
             sizes="(max-width: 640px) 80vw, 360px"
-            className="object-cover [filter:saturate(0.92)_contrast(1.04)_brightness(0.96)] transition-transform duration-500 group-hover:scale-105"
+            className="card-img object-cover [filter:saturate(0.92)_contrast(1.04)_brightness(0.96)]"
           />
           <div className="absolute inset-0 bg-brand-blue-dark/15 mix-blend-multiply" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
           <TypeBadge type={item.type} className="absolute left-3 top-3" />
-          <span className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white opacity-0 backdrop-blur transition-opacity duration-300 group-hover:opacity-100">
+          <span className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white opacity-0 backdrop-blur transition-all duration-300 group-hover:scale-110 group-hover:bg-brand-orange group-hover:opacity-100">
             <PlayIcon className="h-3.5 w-3.5 translate-x-0.5" />
           </span>
         </div>
@@ -35,7 +36,7 @@ export function FeaturedCard({ item, className }: { item: ContentItem; className
             </div>
           )}
         </div>
-      </div>
+      </TiltCard>
     </Link>
   );
 }

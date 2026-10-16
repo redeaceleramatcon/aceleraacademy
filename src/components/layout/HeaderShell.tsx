@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { Container } from "@/components/ui/Container";
 import { MenuIcon, CloseIcon } from "@/components/icons";
@@ -24,6 +26,8 @@ const areaLink = { href: "/minha-area", label: "Minha área" };
 export function HeaderShell({ user }: { user: HeaderUser | null }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [navHover, setNavHover] = useState<string | null>(null);
+  const pathname = usePathname();
 
   // "Minha área" só aparece para quem tem sessão; para os demais, "Entrar".
   const navLinks = user ? [...publicLinks, areaLink] : publicLinks;
@@ -52,16 +56,38 @@ export function HeaderShell({ user }: { user: HeaderUser | null }) {
                 Acelera <span className="text-brand-orange">Academy</span>
               </span>
             </Link>
-            <nav className="hidden items-center gap-6 lg:flex">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="text-sm font-medium text-white/70 transition-colors hover:text-white"
-                >
-                  {link.label}
-                </Link>
-              ))}
+            <nav className="hidden items-center gap-1 lg:flex" onMouseLeave={() => setNavHover(null)}>
+              {navLinks.map((link) => {
+                const ativo = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href.split("/").slice(0, 2).join("/"));
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onMouseEnter={() => setNavHover(link.href)}
+                    onFocus={() => setNavHover(link.href)}
+                    className={cn(
+                      "relative rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                      ativo ? "text-white" : "text-white/70 hover:text-white",
+                    )}
+                  >
+                    {navHover === link.href && (
+                      <motion.span
+                        layoutId="nav-hover"
+                        className="absolute inset-0 rounded-lg bg-white/10"
+                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                      />
+                    )}
+                    <span className="relative">{link.label}</span>
+                    {ativo && (
+                      <motion.span
+                        layoutId="nav-ativo"
+                        className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-brand-orange"
+                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                      />
+                    )}
+                  </Link>
+                );
+              })}
             </nav>
           </div>
 

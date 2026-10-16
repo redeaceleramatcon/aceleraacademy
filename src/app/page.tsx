@@ -6,13 +6,18 @@ import { ContentCard } from "@/components/home/ContentCard";
 import { FeaturedCard } from "@/components/home/FeaturedCard";
 import { LiveCard } from "@/components/home/LiveCard";
 import { CategoryFilter } from "@/components/home/CategoryFilter";
+import { ContinueCard } from "@/components/home/ContinueCard";
+import { Beneficios, ConviteFinal, FaixaCategorias, StatsStrip } from "@/components/home/VisitorSections";
 import { Container } from "@/components/ui/Container";
+import { getSessionUser } from "@/lib/auth";
 import {
   getCategories,
+  getContents,
   getContentsByCategory,
   getFeaturedContent,
   getLives,
 } from "@/lib/data/content";
+import { meuProgresso } from "@/lib/meu-progresso";
 
 export const revalidate = 60;
 
@@ -24,11 +29,15 @@ const liveCardClass = "w-[280px] shrink-0 sm:w-[320px]";
 const HOME_ROW_SLUGS = ["vendas", "gestao", "marketing", "lideranca"];
 
 export default async function Home() {
-  const [featured, lives, categories] = await Promise.all([
+  const [featured, lives, categories, user, todos] = await Promise.all([
     getFeaturedContent(),
     getLives(),
     getCategories(),
+    getSessionUser(),
+    getContents(),
   ]);
+  // Logado: "Continuar assistindo" no topo. Visitante: números do catálogo e convite no fim da página.
+  const progresso = user ? await meuProgresso(user.id) : null;
 
   const rows = (
     await Promise.all(
@@ -50,8 +59,15 @@ export default async function Home() {
         {/* Hero vem de featured_slots; some sozinho quando não há slot ativo. */}
         <Hero />
 
-        {/* "Continuar assistindo" depende de content_progress e de login, que
-            ainda não existem. A seção fica fora até haver progresso real. */}
+        {!user && <StatsStrip conteudos={todos.length} categorias={categories.length} />}
+
+        {progresso && progresso.emAndamento.length > 0 && (
+          <ContentRow title="Continuar assistindo" href="/minha-area">
+            {progresso.emAndamento.map((item) => (
+              <ContinueCard key={item.contentId} item={item} className={rowCardClass} />
+            ))}
+          </ContentRow>
+        )}
 
         <section className="py-6 sm:py-8">
           <Container>
@@ -89,6 +105,14 @@ export default async function Home() {
             ))}
           </ContentRow>
         ))}
+
+        {!user && (
+          <>
+            <Beneficios />
+            <FaixaCategorias nomes={categories.map((c) => c.name)} />
+            <ConviteFinal />
+          </>
+        )}
 
         {vazio && (
           <Container className="py-20">

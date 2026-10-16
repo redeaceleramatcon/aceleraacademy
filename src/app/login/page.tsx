@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Container } from "@/components/ui/Container";
+import { Aurora } from "@/components/motion/HeroMotion";
+import { Reveal } from "@/components/motion/Reveal";
 import { getSessionUser } from "@/lib/auth";
 import { LoginForm } from "./LoginForm";
 
@@ -21,17 +23,20 @@ export default async function LoginPage({
     <main className="relative flex min-h-screen items-center overflow-hidden py-16">
       {/* Mesma atmosfera do Hero: azul institucional descendo para o fundo. */}
       <div className="absolute inset-0 bg-gradient-to-b from-brand-blue-dark/70 via-background to-background" />
+      <Aurora />
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
       <Container className="relative">
         <div className="mx-auto w-full max-w-md">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-lg font-bold tracking-tight text-white">
-              Acelera <span className="text-brand-orange">Academy</span>
-            </span>
-          </Link>
+          <Reveal y={12}>
+            <Link href="/" className="flex items-center gap-2">
+              <span className="text-lg font-bold tracking-tight text-white">
+                Acelera <span className="text-brand-orange">Academy</span>
+              </span>
+            </Link>
+          </Reveal>
 
-          <div className="mt-8 rounded-2xl border border-white/10 bg-surface/80 p-6 backdrop-blur-sm sm:p-8">
+          <Reveal delay={0.12} className="mt-8 rounded-2xl border border-white/10 bg-surface/80 p-6 backdrop-blur-sm sm:p-8">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-orange-light">
               Área do associado
             </p>
@@ -43,7 +48,7 @@ export default async function LoginPage({
             </p>
 
             <LoginForm redirectTo={redirectTo} />
-          </div>
+          </Reveal>
 
           <p className="mt-6 text-center text-xs text-subtle">
             Ainda não tem acesso?{" "}

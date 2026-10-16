@@ -52,6 +52,8 @@ export interface ResumoAtividade {
   ultimoAcesso: string | null;
   progresso: ProgressoConteudo[];
   eventosRecentes: EventoAtividade[];
+  /** Eventos registrados por dia nos últimos 14 dias (do mais antigo ao mais recente). */
+  porDia: { dia: string; total: number }[];
 }
 
 /**
@@ -100,6 +102,7 @@ export async function buscarAtividade(userId: string): Promise<ResumoAtividade |
       completo: !!p.completed_at,
       ultimoAcesso: p.last_accessed_at,
     })),
+    porDia: eventosPorDia(eventos ?? []),
     eventosRecentes: (eventos ?? []).slice(0, 50).map((e) => ({
       tipo: e.tipo,
       pagina: e.pagina,
@@ -126,4 +129,20 @@ function calcularTempoUso(eventos: { criado_em: string }[]): number {
     if (gap > 0 && gap <= CORTE_INATIVIDADE_MS) totalMs += gap;
   }
   return Math.round(totalMs / 60_000);
+}
+
+/** Conta eventos por dia (fuso de São Paulo) nos últimos `dias` dias. Usa os mesmos eventos já lidos (até 200). */
+function eventosPorDia(eventos: { criado_em: string }[], dias = 14): { dia: string; total: number }[] {
+  const fmt = new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Sao_Paulo" }); // AAAA-MM-DD
+  const agora = Date.now();
+  const lista = Array.from({ length: dias }, (_, i) => ({
+    dia: fmt.format(new Date(agora - (dias - 1 - i) * 86_400_000)),
+    total: 0,
+  }));
+  const indice = new Map(lista.map((l, i) => [l.dia, i]));
+  for (const e of eventos) {
+    const i = indice.get(fmt.format(new Date(e.criado_em)));
+    if (i !== undefined) lista[i].total++;
+  }
+  return lista;
 }

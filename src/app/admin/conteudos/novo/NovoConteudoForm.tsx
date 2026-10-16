@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { criarConteudo, type NovoConteudoState } from "../actions";
 import type { CategoriaAdmin, MentorAdmin } from "@/lib/conteudo";
+import { FormFeedback } from "@/components/motion/FormFeedback";
+import { Spinner } from "@/components/ui/Spinner";
 
 const inputClass =
   "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/35 transition-colors focus:border-brand-blue-light/60 focus:outline-none";
@@ -147,27 +149,21 @@ export function NovoConteudoForm({
           disabled={pending}
           className="rounded-lg bg-brand-orange px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-light disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {pending ? "Salvando..." : "Criar conteúdo"}
+          {pending ? (
+            <span className="flex items-center gap-2">
+              <Spinner /> Salvando...
+            </span>
+          ) : (
+            "Criar conteúdo"
+          )}
         </button>
       </div>
 
-      {state.error && (
-        <p role="alert" className="text-xs text-brand-orange-light">
-          {state.error}
-        </p>
-      )}
-      {state.aviso && (
-        <p className="text-xs text-brand-blue-light">
-          {state.aviso}
-          {state.slug && (
-            <>
-              {" "}
-              <Link href={`/conteudos/${state.slug}`} className="underline">
-                Ver conteúdo →
-              </Link>
-            </>
-          )}
-        </p>
+      <FormFeedback error={state.error} aviso={state.aviso} />
+      {state.slug && (
+        <Link href={`/conteudos/${state.slug}`} className="text-sm font-semibold text-brand-blue-light underline">
+          Ver conteúdo →
+        </Link>
       )}
     </form>
   );
