@@ -29,7 +29,12 @@ export default async function NovoConteudoPage() {
             {admin ? "← Voltar para o painel admin" : "← Voltar para Minha área"}
           </Link>
 
-          <h1 className="mt-3 text-xl font-bold text-foreground sm:text-2xl">Novo conteúdo</h1>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <h1 className="text-xl font-bold text-foreground sm:text-2xl">Novo conteúdo</h1>
+            <Link href="/admin/conteudos" className="text-xs font-semibold text-brand-blue-light hover:underline">
+              Trocar a capa de vídeos já publicados →
+            </Link>
+          </div>
           <p className="mt-2 text-sm text-muted">
             Cole o link de um vídeo do YouTube (o canal deve estar configurado como{" "}
             <strong>Não listado</strong>) e preencha os dados abaixo.

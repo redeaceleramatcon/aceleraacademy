@@ -23,11 +23,14 @@ export function TiltCard({
   children,
   className,
   max = 10,
+  selecionado = false,
 }: {
   children: ReactNode;
   className?: string;
   /** Inclinação máxima em graus. */
   max?: number;
+  /** Card "aberto" (painel de detalhes mostrado embaixo): ganha borda laranja e fica um pouco maior. */
+  selecionado?: boolean;
 }) {
   const px = useMotionValue(0.5);
   const py = useMotionValue(0.5);
@@ -68,6 +71,7 @@ export function TiltCard({
       onPointerMove={mover}
       onPointerLeave={sair}
       style={estilo}
+      data-selecionado={selecionado ? "true" : undefined}
       className={`tilt ${className ?? ""}`}
     >
       {children}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { criarConteudo, type NovoConteudoState } from "../actions";
 import type { CategoriaAdmin, MentorAdmin } from "@/lib/conteudo";
+import { CapaUploader } from "@/components/admin/CapaUploader";
 import { FormFeedback } from "@/components/motion/FormFeedback";
 import { Spinner } from "@/components/ui/Spinner";
 
@@ -58,6 +59,11 @@ export function NovoConteudoForm({
           Descrição
         </label>
         <textarea id="description" name="description" rows={3} className={inputClass} />
+      </div>
+
+      <div>
+        <span className={labelClass}>Capa do vídeo (opcional)</span>
+        <CapaUploader />
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">

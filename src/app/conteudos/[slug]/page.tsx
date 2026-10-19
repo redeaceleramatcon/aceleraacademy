@@ -5,8 +5,8 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { TypeBadge } from "@/components/ui/Badge";
-import { ContentRow } from "@/components/home/ContentRow";
-import { ContentCard } from "@/components/home/ContentCard";
+import { CatalogoRow } from "@/components/home/CatalogoRow";
+import { BotaoMinhaLista, MinhaListaProvider } from "@/components/lista/MinhaListaProvider";
 import { HeroFade, WordReveal } from "@/components/motion/HeroMotion";
 import { HeroBackground } from "@/components/motion/HeroBackground";
 import { AccordionItem } from "@/components/motion/Accordion";
@@ -17,6 +17,7 @@ import { YoutubePlayer } from "@/components/conteudo/YoutubePlayer";
 import { getSessionUser } from "@/lib/auth";
 import { getContentBySlug, getRelatedContent } from "@/lib/data/content";
 import { progressoDoConteudo } from "@/lib/meu-progresso";
+import { idsMinhaLista } from "@/lib/minha-lista";
 
 export const revalidate = 60;
 
@@ -49,7 +50,9 @@ export default async function ConteudoDetailPage({
 
   const [related, user] = await Promise.all([getRelatedContent(item.category, item.slug), getSessionUser()]);
   // Onde o aluno parou (só se ainda não concluiu): o player abre direto nesse ponto.
-  const andamento = user ? await progressoDoConteudo(user.id, item.uuid) : null;
+  const [andamento, salvos] = user
+    ? await Promise.all([progressoDoConteudo(user.id, item.uuid), idsMinhaLista(user.id)])
+    : [null, [] as string[]];
   const retomarDe = andamento && !andamento.completo && andamento.percent < 95 ? andamento.posicaoSegundos : 0;
   const meta = [item.mentor, item.duration, item.categoryName].filter(Boolean);
   const totalLessons = item.modules.reduce((total, module) => total + module.lessons.length, 0);
@@ -57,6 +60,7 @@ export default async function ConteudoDetailPage({
   return (
     <>
       <Header />
+      <MinhaListaProvider inicial={salvos} logado={!!user}>
       <main className="pb-16">
         <section className="relative h-[44vh] min-h-[340px] w-full overflow-hidden sm:h-[50vh]">
           <HeroBackground />
@@ -275,6 +279,7 @@ export default async function ConteudoDetailPage({
               )}
 
               <div className="my-4 border-t border-white/10" />
+              <BotaoMinhaLista uuid={item.uuid} titulo={item.title} className="mb-2 w-full" />
               <CopyLinkButton />
             </aside>
             </Reveal>
@@ -283,21 +288,15 @@ export default async function ConteudoDetailPage({
 
         {related.length > 0 && (
           <div className="mt-4">
-            <ContentRow
-              title="Conteúdos relacionados"
+            <CatalogoRow
+              titulo="Conteúdos relacionados"
               href={item.category ? `/categorias/${item.category}` : "/conteudos"}
-            >
-              {related.map((relatedItem) => (
-                <ContentCard
-                  key={relatedItem.slug}
-                  item={relatedItem}
-                  className="w-[260px] shrink-0 sm:w-[280px]"
-                />
-              ))}
-            </ContentRow>
+              itens={related}
+            />
           </div>
         )}
       </main>
+      </MinhaListaProvider>
       <Footer />
     </>
   );

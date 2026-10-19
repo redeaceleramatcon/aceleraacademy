@@ -30,11 +30,11 @@ export function HeroVideoCard({
     <motion.div
       initial={{ opacity: 0, x: 70, rotate: 2 }}
       animate={{ opacity: 1, x: 0, rotate: 0 }}
-      transition={{ duration: 1, delay: 0.5, ease: EASE }}
+      transition={{ duration: 0.8, delay: 0.2, ease: EASE }}
       className="relative"
     >
       {/* halo atrás do cartão */}
-      <div aria-hidden className="absolute -inset-6 rounded-[2rem] bg-gradient-to-br from-brand-blue-light/30 via-transparent to-brand-orange/25 blur-2xl" />
+      <div aria-hidden className="absolute -inset-8 rounded-[2.5rem] bg-[radial-gradient(ellipse_at_30%_20%,rgb(46_134_214/0.32),transparent_60%),radial-gradient(ellipse_at_80%_90%,rgb(245_115_10/0.26),transparent_60%)]" />
 
       <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}>
         <Link href={href} className="group relative block" aria-label={`Assistir: ${titulo}`}>

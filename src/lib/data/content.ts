@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { supabasePublic } from "@/lib/supabase/public";
 import type {
   Category,
@@ -57,7 +58,7 @@ type MentorLinkRow = {
   mentors: { name: string; role?: string | null } | null;
 };
 
-type ContentRow = {
+export type ContentRow = {
   id: string;
   slug: string;
   title: string;
@@ -83,7 +84,7 @@ function sortedMentors(row: ContentRow) {
     .filter((mentor) => mentor.name.length > 0);
 }
 
-function toContentItem(row: ContentRow): ContentItem {
+export function toContentItem(row: ContentRow): ContentItem {
   const mentors = sortedMentors(row);
 
   return {
@@ -107,7 +108,7 @@ function toContentItem(row: ContentRow): ContentItem {
 // -----------------------------------------------------------------------------
 
 /** Campos de card. `categories(...)` etc. vêm das FKs declaradas no schema. */
-const LIST_SELECT = `
+export const LIST_SELECT = `
   id, slug, title, description, content_type, duration_seconds, thumbnail_url,
   is_featured, published_at,
   categories ( slug, name ),
@@ -140,7 +141,7 @@ function fail(context: string, message: string): never {
   throw new Error(`Falha ao carregar ${context}: ${message}`);
 }
 
-export async function getCategories(): Promise<Category[]> {
+async function _getCategories(): Promise<Category[]> {
   const { data, error } = await supabasePublic
     .from("categories")
     .select("slug, name")
@@ -150,7 +151,7 @@ export async function getCategories(): Promise<Category[]> {
   return data ?? [];
 }
 
-export async function getCategoryBySlug(slug: string): Promise<Category | null> {
+async function _getCategoryBySlug(slug: string): Promise<Category | null> {
   const { data, error } = await supabasePublic
     .from("categories")
     .select("slug, name")
@@ -166,7 +167,7 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
  * categoria. Só retorna publicados — o RLS já garante isso, o filtro explícito
  * deixa a intenção visível na consulta.
  */
-export async function getContents(options?: {
+async function _getContents(options?: {
   query?: string;
   category?: string;
   limit?: number;
@@ -203,12 +204,12 @@ export async function getContents(options?: {
   return ((data ?? []) as unknown as ContentRow[]).map(toContentItem);
 }
 
-export async function getContentsByCategory(slug: string): Promise<ContentItem[]> {
+async function _getContentsByCategory(slug: string): Promise<ContentItem[]> {
   return getContents({ category: slug });
 }
 
 /** Fileira "Conteúdos em destaque" — controlada por content.is_featured. */
-export async function getFeaturedContent(limit = 12): Promise<ContentItem[]> {
+async function _getFeaturedContent(limit = 12): Promise<ContentItem[]> {
   const { data, error } = await supabasePublic
     .from("content")
     .select(LIST_SELECT)
@@ -226,7 +227,7 @@ export async function getFeaturedContent(limit = 12): Promise<ContentItem[]> {
  * Retorna null quando não há slot ativo ou o conteúdo apontado não está
  * publicado (nesse caso o RLS devolve o vínculo sem conteúdo).
  */
-export async function getHeroContent(): Promise<ContentItem | null> {
+async function _getHeroContent(): Promise<ContentItem | null> {
   const { data, error } = await supabasePublic
     .from("featured_slots")
     .select(`slot, active, content ( ${LIST_SELECT} )`)
@@ -240,7 +241,7 @@ export async function getHeroContent(): Promise<ContentItem | null> {
   return row ? toContentItem(row) : null;
 }
 
-export async function getLives(limit = 12): Promise<ContentItem[]> {
+async function _getLives(limit = 12): Promise<ContentItem[]> {
   const { data, error } = await supabasePublic
     .from("content")
     .select(LIST_SELECT)
@@ -253,7 +254,7 @@ export async function getLives(limit = 12): Promise<ContentItem[]> {
   return ((data ?? []) as unknown as ContentRow[]).map(toContentItem);
 }
 
-export async function getContentBySlug(slug: string): Promise<ContentDetail | null> {
+async function _getContentBySlug(slug: string): Promise<ContentDetail | null> {
   const { data, error } = await supabasePublic
     .from("content")
     .select(DETAIL_SELECT)
@@ -332,7 +333,7 @@ export async function getContentBySlug(slug: string): Promise<ContentDetail | nu
 }
 
 /** Conteúdos relacionados (mesma categoria), excluindo o atual. */
-export async function getRelatedContent(
+async function _getRelatedContent(
   categorySlug: string | undefined,
   excludeSlug: string,
   limit = 6,
@@ -342,7 +343,7 @@ export async function getRelatedContent(
   return items.filter((item) => item.slug !== excludeSlug).slice(0, limit);
 }
 
-export async function getMentors(): Promise<{ name: string; role?: string }[]> {
+async function _getMentors(): Promise<{ name: string; role?: string }[]> {
   const { data, error } = await supabasePublic
     .from("mentors")
     .select("name, role")
@@ -356,7 +357,7 @@ export async function getMentors(): Promise<{ name: string; role?: string }[]> {
   }));
 }
 
-export async function getPartners(): Promise<{ name: string; logoUrl?: string }[]> {
+async function _getPartners(): Promise<{ name: string; logoUrl?: string }[]> {
   const { data, error } = await supabasePublic
     .from("partners")
     .select("name, logo_url")
@@ -368,3 +369,24 @@ export async function getPartners(): Promise<{ name: string; logoUrl?: string }[
     logoUrl: partner.logo_url ?? undefined,
   }));
 }
+
+// -----------------------------------------------------------------------------
+// Cache entre requisições
+// -----------------------------------------------------------------------------
+// Tudo acima lê só com a chave pública (anon), sem sessão: o resultado é igual para qualquer visitante,
+// então pode ficar guardado e ser reaproveitado. A Home chegava a fazer 8+ consultas ao banco por visita;
+// agora a maioria sai do cache (renova a cada 60 s, o mesmo `revalidate` que as páginas já declaravam).
+// Quem publica conteúdo vê na hora: a ação de criar conteúdo chama updateTag("catalogo").
+const CACHE = { revalidate: 60, tags: ["catalogo"] };
+
+export const getCategories = unstable_cache(_getCategories, ["catalogo:getCategories"], CACHE);
+export const getCategoryBySlug = unstable_cache(_getCategoryBySlug, ["catalogo:getCategoryBySlug"], CACHE);
+export const getContents = unstable_cache(_getContents, ["catalogo:getContents"], CACHE);
+export const getContentsByCategory = unstable_cache(_getContentsByCategory, ["catalogo:getContentsByCategory"], CACHE);
+export const getFeaturedContent = unstable_cache(_getFeaturedContent, ["catalogo:getFeaturedContent"], CACHE);
+export const getHeroContent = unstable_cache(_getHeroContent, ["catalogo:getHeroContent"], CACHE);
+export const getLives = unstable_cache(_getLives, ["catalogo:getLives"], CACHE);
+export const getContentBySlug = unstable_cache(_getContentBySlug, ["catalogo:getContentBySlug"], CACHE);
+export const getRelatedContent = unstable_cache(_getRelatedContent, ["catalogo:getRelatedContent"], CACHE);
+export const getMentors = unstable_cache(_getMentors, ["catalogo:getMentors"], CACHE);
+export const getPartners = unstable_cache(_getPartners, ["catalogo:getPartners"], CACHE);

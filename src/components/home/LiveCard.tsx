@@ -2,15 +2,31 @@ import Image from "next/image";
 import Link from "next/link";
 import { TypeBadge } from "@/components/ui/Badge";
 import { TiltCard } from "@/components/motion/TiltCard";
+import { CardAcoes } from "@/components/home/CardAcoes";
+import { aoClicarCard, type PropsCardSelecionavel } from "@/components/home/cardProps";
 import { cn } from "@/lib/utils";
 import type { ContentItem } from "@/types/content";
 
-export function LiveCard({ item, className }: { item: ContentItem; className?: string }) {
+export function LiveCard({
+  item,
+  className,
+  selecionado,
+  aoSelecionar,
+}: { item: ContentItem; className?: string } & PropsCardSelecionavel) {
   const meta = [item.mentor, item.duration].filter(Boolean).join(" · ");
 
   return (
-    <Link href={`/conteudos/${item.slug}`} className={cn("group block", className)}>
-      <TiltCard className="relative aspect-video overflow-hidden rounded-xl ring-1 ring-white/5 transition-[box-shadow,--tw-ring-color] duration-300 hover:ring-white/10 hover:shadow-elevated">
+    <Link
+      href={`/conteudos/${item.slug}`}
+      data-slug={item.slug}
+      onClick={aoClicarCard(aoSelecionar)}
+      aria-expanded={aoSelecionar ? !!selecionado : undefined}
+      className={cn("group block", className)}
+    >
+      <TiltCard
+        selecionado={selecionado}
+        className="relative aspect-video overflow-hidden rounded-xl ring-1 ring-white/5 transition-[box-shadow,--tw-ring-color] duration-300 hover:ring-white/10 hover:shadow-elevated"
+      >
         <Image
           src={item.image}
           alt={item.title}
@@ -21,6 +37,7 @@ export function LiveCard({ item, className }: { item: ContentItem; className?: s
         <div className="absolute inset-0 bg-brand-blue-dark/15 mix-blend-multiply" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
         <TypeBadge type="live" className="absolute left-3 top-3" />
+        {aoSelecionar && <CardAcoes uuid={item.uuid} titulo={item.title} fixo={selecionado} />}
 
         <div className="absolute inset-x-0 bottom-0 p-4">
           {item.partner && (

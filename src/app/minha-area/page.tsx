@@ -12,6 +12,9 @@ import { getSessionProfile, displayName } from "@/lib/auth";
 import { ehAdmin, ehEditor } from "@/lib/atividade";
 import { getContents } from "@/lib/data/content";
 import { meuProgresso } from "@/lib/meu-progresso";
+import { minhaLista } from "@/lib/minha-lista";
+import { CatalogoRow } from "@/components/home/CatalogoRow";
+import { MinhaListaProvider } from "@/components/lista/MinhaListaProvider";
 import { signOut } from "@/app/login/actions";
 import { TrocarSenhaForm } from "./TrocarSenhaForm";
 
@@ -79,7 +82,11 @@ export default async function MinhaAreaPage() {
     );
   }
 
-  const [progresso, catalogo] = await Promise.all([meuProgresso(profile.id), getContents()]);
+  const [progresso, catalogo, salvos] = await Promise.all([
+    meuProgresso(profile.id),
+    getContents(),
+    minhaLista(profile.id),
+  ]);
   const concluidos = progresso.concluidos.length;
   const jornada = catalogo.length > 0 ? Math.round((concluidos / catalogo.length) * 100) : 0;
   const hora = Number(
@@ -127,6 +134,11 @@ export default async function MinhaAreaPage() {
               {(admin || editor) && (
                 <Link href="/admin/conteudos/novo" className={botao}>
                   Novo conteúdo
+                </Link>
+              )}
+              {(admin || editor) && (
+                <Link href="/admin/conteudos" className={botao}>
+                  Capas dos vídeos
                 </Link>
               )}
               {admin && (
@@ -195,6 +207,14 @@ export default async function MinhaAreaPage() {
                 Explorar conteúdos
               </Link>
             </Reveal>
+          )}
+
+          {salvos.length > 0 && (
+            <MinhaListaProvider inicial={salvos.map((i) => i.uuid)} logado>
+              <div className="-mx-4 mt-6 sm:-mx-6 lg:-mx-10">
+                <CatalogoRow titulo="Minha lista" itens={salvos} />
+              </div>
+            </MinhaListaProvider>
           )}
 
           {progresso.concluidos.length > 0 && (

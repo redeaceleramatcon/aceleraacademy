@@ -37,13 +37,22 @@
 
 body {
   /* Luzes suaves de fundo (azul no alto à direita, laranja à esquerda) sobre o azul-marinho: o fundo deixa de ser chapado. */
+  background: var(--color-background);
+  color: var(--color-foreground);
+}
+
+/* As luzes de fundo ficam numa camada fixa própria (a GPU só a move, não repinta). `background-attachment: fixed`
+   obrigava o navegador a repintar o fundo inteiro a cada rolagem. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
   background:
     radial-gradient(1100px 620px at 88% -8%, rgb(46 134 214 / 0.28), transparent 62%),
     radial-gradient(900px 560px at -8% 38%, rgb(245 115 10 / 0.11), transparent 62%),
-    radial-gradient(900px 600px at 60% 110%, rgb(46 134 214 / 0.16), transparent 60%),
-    var(--color-background);
-  background-attachment: fixed;
-  color: var(--color-foreground);
+    radial-gradient(900px 600px at 60% 110%, rgb(46 134 214 / 0.16), transparent 60%);
 }
 
 ::selection {
@@ -119,17 +128,19 @@ option:focus {
 
 /* Grade técnica que desliza devagar e some nas bordas. */
 .grade-fundo {
+  position: absolute;
+  inset: -56px;
   background-image:
     linear-gradient(rgb(255 255 255 / 0.05) 1px, transparent 1px),
     linear-gradient(90deg, rgb(255 255 255 / 0.05) 1px, transparent 1px);
   background-size: 56px 56px;
-  mask-image: radial-gradient(ellipse 80% 70% at 30% 45%, #000 15%, transparent 78%);
   animation: grade-desliza 40s linear infinite;
+  will-change: transform;
 }
 
 @keyframes grade-desliza {
   to {
-    background-position: 56px 56px;
+    transform: translate3d(56px, 56px, 0);
   }
 }
 
@@ -231,11 +242,11 @@ body::before {
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
   opacity: 0;
   transition: opacity 0.3s ease;
-  animation: angulo 2.4s linear infinite;
 }
 
 .tilt:hover .card-borda {
   opacity: 1;
+  animation: angulo 2.4s linear infinite;
 }
 
 @keyframes angulo {
@@ -251,12 +262,12 @@ body::before {
 
 .fila-cards:hover > a:not(:hover) {
   opacity: 0.55;
-  filter: saturate(0.6) blur(0.4px);
+  filter: saturate(0.6);
   transform: scale(0.96);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card-borda,
+  .tilt:hover .card-borda,
   .tilt:hover .card-shine::after {
     animation: none;
   }
@@ -333,4 +344,12 @@ body::before {
   .shimmer::after {
     animation: none;
   }
+}
+
+/* Card selecionado (painel de detalhes aberto embaixo da fileira): borda laranja, maior e levantado. */
+.tilt[data-selecionado="true"] {
+  scale: 1.05;
+  translate: 0 -6px;
+  box-shadow: 0 0 0 2px var(--color-brand-orange), 0 22px 44px -14px rgb(245 115 10 / 0.55);
+  z-index: 5;
 }

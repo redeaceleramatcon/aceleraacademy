@@ -34,14 +34,14 @@ export async function Hero() {
           </HeroFade>
           <WordReveal
             text={item.title}
-            delay={0.25}
+            delay={0.1}
             className="mt-4 text-4xl font-bold leading-[1.05] tracking-tight text-white text-balance sm:text-5xl lg:text-6xl"
           />
-          <HeroFade delay={0.7}>
+          <HeroFade delay={0.3}>
             <p className="mt-5 max-w-lg text-base leading-relaxed text-white/75 sm:text-lg">{item.description}</p>
           </HeroFade>
 
-          <HeroFade delay={0.85}>
+          <HeroFade delay={0.4}>
             <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/65">
               {meta.map((value, index) => (
                 <span key={value} className="flex items-center gap-x-3">
@@ -52,7 +52,7 @@ export async function Hero() {
             </div>
           </HeroFade>
 
-          <HeroFade delay={1} className="mt-8 flex flex-wrap items-center gap-3">
+          <HeroFade delay={0.5} className="mt-8 flex flex-wrap items-center gap-3">
             <Magnetic>
               <Link
                 href={`/conteudos/${item.slug}`}

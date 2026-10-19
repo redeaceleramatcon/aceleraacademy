@@ -3,15 +3,31 @@ import Link from "next/link";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { PlayIcon } from "@/components/icons";
 import { TiltCard } from "@/components/motion/TiltCard";
+import { CardAcoes } from "@/components/home/CardAcoes";
+import { aoClicarCard, type PropsCardSelecionavel } from "@/components/home/cardProps";
 import { cn } from "@/lib/utils";
 import type { ContentItem } from "@/types/content";
 
-export function ContentCard({ item, className }: { item: ContentItem; className?: string }) {
+export function ContentCard({
+  item,
+  className,
+  selecionado,
+  aoSelecionar,
+}: { item: ContentItem; className?: string } & PropsCardSelecionavel) {
   const meta = [item.mentor, item.duration].filter(Boolean).join(" · ");
 
   return (
-    <Link href={`/conteudos/${item.slug}`} className={cn("group block", className)}>
-      <TiltCard className="relative aspect-video overflow-hidden rounded-xl bg-surface ring-1 ring-white/5 transition-[box-shadow,--tw-ring-color] duration-300 ease-out hover:ring-white/10 hover:shadow-elevated">
+    <Link
+      href={`/conteudos/${item.slug}`}
+      data-slug={item.slug}
+      onClick={aoClicarCard(aoSelecionar)}
+      aria-expanded={aoSelecionar ? !!selecionado : undefined}
+      className={cn("group block", className)}
+    >
+      <TiltCard
+        selecionado={selecionado}
+        className="relative aspect-video overflow-hidden rounded-xl bg-surface ring-1 ring-white/5 transition-[box-shadow,--tw-ring-color] duration-300 ease-out hover:ring-white/10 hover:shadow-elevated"
+      >
         <Image
           src={item.image}
           alt={item.title}
@@ -23,6 +39,9 @@ export function ContentCard({ item, className }: { item: ContentItem; className?
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent opacity-80 transition-all duration-300 group-hover:via-black/30 group-hover:opacity-100" />
 
+        {aoSelecionar ? (
+          <CardAcoes uuid={item.uuid} titulo={item.title} fixo={selecionado} />
+        ) : (
         <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <span className="relative flex h-12 w-12 scale-50 items-center justify-center rounded-full bg-white/95 text-background shadow-lg transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-100">
             <span aria-hidden className="absolute inset-0 animate-ping rounded-full bg-white/60 [animation-duration:1.4s]" />
@@ -30,6 +49,7 @@ export function ContentCard({ item, className }: { item: ContentItem; className?
             <PlayIcon className="relative h-4 w-4 translate-x-0.5" />
           </span>
         </div>
+        )}
 
         <div className="absolute inset-x-0 bottom-0 p-3 pb-4">
           <p className="line-clamp-1 text-sm font-semibold text-white transition-transform duration-300 group-hover:-translate-y-0.5">{item.title}</p>

@@ -38,17 +38,17 @@ export function Aurora({ className }: { className?: string }) {
   return (
     <div aria-hidden className={cn("pointer-events-none absolute inset-0 overflow-hidden", className)}>
       <motion.div
-        className="absolute -left-40 top-1/4 h-[520px] w-[520px] rounded-full bg-brand-orange/25 blur-[130px] mix-blend-screen"
+        className="absolute -left-40 top-1/4 h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,rgb(245_115_10/0.26)_0%,transparent_68%)] will-change-transform"
         animate={{ x: [0, 90, -20, 0], y: [0, -70, 40, 0], scale: [1, 1.18, 0.95, 1] }}
         transition={{ duration: 19, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute right-[-10%] top-[8%] h-[560px] w-[560px] rounded-full bg-brand-blue-light/25 blur-[140px] mix-blend-screen"
+        className="absolute right-[-10%] top-[8%] h-[560px] w-[560px] rounded-full bg-[radial-gradient(circle,rgb(46_134_214/0.28)_0%,transparent_68%)] will-change-transform"
         animate={{ x: [0, -110, 30, 0], y: [0, 80, -30, 0], scale: [1, 0.92, 1.15, 1] }}
         transition={{ duration: 23, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute bottom-[-18%] left-[28%] h-[460px] w-[460px] rounded-full bg-brand-orange-light/15 blur-[130px] mix-blend-screen"
+        className="absolute bottom-[-18%] left-[28%] h-[460px] w-[460px] rounded-full bg-[radial-gradient(circle,rgb(255_145_66/0.16)_0%,transparent_68%)] will-change-transform"
         animate={{ x: [0, 70, -60, 0], y: [0, -50, 30, 0], scale: [1, 1.12, 0.9, 1] }}
         transition={{ duration: 27, repeat: Infinity, ease: "easeInOut" }}
       />
@@ -157,7 +157,7 @@ export function ScrollHint() {
       className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 sm:block"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ delay: 1.6, duration: 0.8 }}
+      transition={{ delay: 1, duration: 0.8 }}
     >
       <div className="flex h-10 w-6 justify-center rounded-full border border-white/30 pt-2">
         <motion.span

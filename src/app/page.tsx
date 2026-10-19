@@ -2,12 +2,11 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Hero } from "@/components/home/Hero";
 import { ContentRow } from "@/components/home/ContentRow";
-import { ContentCard } from "@/components/home/ContentCard";
-import { FeaturedCard } from "@/components/home/FeaturedCard";
-import { LiveCard } from "@/components/home/LiveCard";
+import { CatalogoRow, type ProgressoPorSlug } from "@/components/home/CatalogoRow";
 import { CategoryFilter } from "@/components/home/CategoryFilter";
 import { ContinueCard } from "@/components/home/ContinueCard";
 import { Beneficios, ConviteFinal, FaixaCategorias, StatsStrip } from "@/components/home/VisitorSections";
+import { MinhaListaProvider } from "@/components/lista/MinhaListaProvider";
 import { Container } from "@/components/ui/Container";
 import { getSessionUser } from "@/lib/auth";
 import {
@@ -18,12 +17,11 @@ import {
   getLives,
 } from "@/lib/data/content";
 import { meuProgresso } from "@/lib/meu-progresso";
+import { minhaLista } from "@/lib/minha-lista";
 
 export const revalidate = 60;
 
 const rowCardClass = "w-[260px] shrink-0 sm:w-[280px]";
-const featuredCardClass = "w-[300px] shrink-0 sm:w-[360px]";
-const liveCardClass = "w-[280px] shrink-0 sm:w-[320px]";
 
 /** Fileiras temáticas da Home, na ordem em que aparecem. */
 const HOME_ROW_SLUGS = ["vendas", "gestao", "marketing", "lideranca"];
@@ -36,8 +34,15 @@ export default async function Home() {
     getSessionUser(),
     getContents(),
   ]);
-  // Logado: "Continuar assistindo" no topo. Visitante: números do catálogo e convite no fim da página.
-  const progresso = user ? await meuProgresso(user.id) : null;
+  // Logado: "Continuar assistindo" e "Minha lista" no topo. Visitante: números do catálogo e convite no fim da página.
+  const [progresso, salvos] = user
+    ? await Promise.all([meuProgresso(user.id), minhaLista(user.id)])
+    : [null, [] as Awaited<ReturnType<typeof minhaLista>>];
+
+  // Onde o aluno está em cada conteúdo (o painel de detalhes mostra "Continuar", "Concluído"...).
+  const progressoPorSlug: ProgressoPorSlug = {};
+  for (const p of progresso?.emAndamento ?? []) progressoPorSlug[p.slug] = { percent: p.percent, completo: false };
+  for (const p of progresso?.concluidos ?? []) progressoPorSlug[p.slug] = { percent: 100, completo: true };
 
   const rows = (
     await Promise.all(
@@ -61,50 +66,58 @@ export default async function Home() {
 
         {!user && <StatsStrip conteudos={todos.length} categorias={categories.length} />}
 
-        {progresso && progresso.emAndamento.length > 0 && (
-          <ContentRow title="Continuar assistindo" href="/minha-area">
-            {progresso.emAndamento.map((item) => (
-              <ContinueCard key={item.contentId} item={item} className={rowCardClass} />
-            ))}
-          </ContentRow>
-        )}
+        <MinhaListaProvider inicial={salvos.map((s) => s.uuid)} logado={!!user}>
+          {progresso && progresso.emAndamento.length > 0 && (
+            <ContentRow title="Continuar assistindo" href="/minha-area">
+              {progresso.emAndamento.map((item) => (
+                <ContinueCard key={item.contentId} item={item} className={rowCardClass} />
+              ))}
+            </ContentRow>
+          )}
 
-        <section className="py-6 sm:py-8">
-          <Container>
-            <h2 className="mb-4 text-xl font-bold tracking-tight text-foreground sm:mb-5 sm:text-2xl">
-              Explore por categoria
-            </h2>
-            <CategoryFilter />
-          </Container>
-        </section>
+          {salvos.length > 0 && (
+            <CatalogoRow titulo="Minha lista" href="/minha-area" itens={salvos} progresso={progressoPorSlug} />
+          )}
 
-        {featured.length > 0 && (
-          <ContentRow title="Conteúdos em destaque" href="/conteudos">
-            {featured.map((item) => (
-              <FeaturedCard key={item.slug} item={item} className={featuredCardClass} />
-            ))}
-          </ContentRow>
-        )}
+          <section className="py-6 sm:py-8">
+            <Container>
+              <h2 className="mb-4 text-xl font-bold tracking-tight text-foreground sm:mb-5 sm:text-2xl">
+                Explore por categoria
+              </h2>
+              <CategoryFilter />
+            </Container>
+          </section>
 
-        {lives.length > 0 && (
-          <ContentRow title="Lives com parceiros" href="/conteudos">
-            {lives.map((item) => (
-              <LiveCard key={item.slug} item={item} className={liveCardClass} />
-            ))}
-          </ContentRow>
-        )}
+          {featured.length > 0 && (
+            <CatalogoRow
+              titulo="Conteúdos em destaque"
+              href="/conteudos"
+              itens={featured}
+              variante="featured"
+              progresso={progressoPorSlug}
+            />
+          )}
 
-        {rows.map(({ category, items }) => (
-          <ContentRow
-            key={category.slug}
-            title={category.name}
-            href={`/categorias/${category.slug}`}
-          >
-            {items.map((item) => (
-              <ContentCard key={item.slug} item={item} className={rowCardClass} />
-            ))}
-          </ContentRow>
-        ))}
+          {lives.length > 0 && (
+            <CatalogoRow
+              titulo="Lives com parceiros"
+              href="/conteudos"
+              itens={lives}
+              variante="live"
+              progresso={progressoPorSlug}
+            />
+          )}
+
+          {rows.map(({ category, items }) => (
+            <CatalogoRow
+              key={category.slug}
+              titulo={category.name}
+              href={`/categorias/${category.slug}`}
+              itens={items}
+              progresso={progressoPorSlug}
+            />
+          ))}
+        </MinhaListaProvider>
 
         {!user && (
           <>

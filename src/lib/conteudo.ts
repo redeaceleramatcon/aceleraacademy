@@ -1,4 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/service";
+import { copiarMiniaturaYoutube, melhorMiniaturaYoutube } from "@/lib/capas";
 
 /**
  * Escrita do catálogo (content/videos/mentors) — só o Admin usa isto, sempre
@@ -114,6 +115,8 @@ export interface NovoConteudoInput {
   mentorNomeNovo?: string;
   publicarAgora: boolean;
   featured: boolean;
+  /** URL de uma capa própria (já enviada para o Storage). Sem ela, vale a miniatura do YouTube. */
+  capaUrl?: string;
 }
 
 /** Cria o conteúdo e devolve o slug final — para linkar para /conteudos/[slug]. */
@@ -148,7 +151,7 @@ export async function criarConteudoYoutube(input: NovoConteudoInput): Promise<{ 
       .insert({
         provider: "youtube",
         provider_video_id: videoId,
-        thumbnail_url: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
+        thumbnail_url: await melhorMiniaturaYoutube(videoId),
         status: "ready",
       })
       .select("id")
@@ -179,6 +182,7 @@ export async function criarConteudoYoutube(input: NovoConteudoInput): Promise<{ 
       slug,
       title: input.title,
       description: input.description || null,
+      thumbnail_url: input.capaUrl ?? null,
       content_type: input.contentType,
       category_id: categoria.id,
       video_id: videoRowId,
@@ -199,4 +203,82 @@ export async function criarConteudoYoutube(input: NovoConteudoInput): Promise<{ 
   }
 
   return { slug };
+}
+
+export interface ConteudoParaCapa {
+  id: string;
+  slug: string;
+  titulo: string;
+  status: "draft" | "published" | "archived";
+  categoria: string | null;
+  /** A imagem que o catálogo mostra hoje (capa própria ou miniatura do YouTube). */
+  capaAtual: string | null;
+  temCapaPropria: boolean;
+}
+
+/** Todos os conteúdos (inclusive rascunhos e arquivados) para a tela de gerenciar capas. */
+export async function listarConteudosParaCapa(): Promise<ConteudoParaCapa[]> {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("content")
+    .select("id, slug, title, status, thumbnail_url, categories(name), videos(thumbnail_url)")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+
+  type Linha = {
+    id: string;
+    slug: string;
+    title: string;
+    status: ConteudoParaCapa["status"];
+    thumbnail_url: string | null;
+    categories: { name: string } | null;
+    videos: { thumbnail_url: string | null } | null;
+  };
+  return ((data ?? []) as unknown as Linha[]).map((c) => ({
+    id: c.id,
+    slug: c.slug,
+    titulo: c.title,
+    status: c.status,
+    categoria: c.categories?.name ?? null,
+    capaAtual: c.thumbnail_url ?? c.videos?.thumbnail_url ?? null,
+    temCapaPropria: !!c.thumbnail_url,
+  }));
+}
+
+/** Grava (ou troca) a capa própria de um conteúdo. */
+export async function definirCapa(contentId: string, capaUrl: string | null) {
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("content").update({ thumbnail_url: capaUrl }).eq("id", contentId);
+  if (error) throw error;
+}
+
+/**
+ * Renova a miniatura do YouTube de um vídeo (ou de todos, sem `contentId`): copia a imagem que o YouTube mostra
+ * agora para o armazenamento da Academy. O YouTube mantém o mesmo endereço quando a capa muda e o site guarda a
+ * imagem em cache, então só uma cópia com nome novo garante que a capa nova apareça.
+ * Mexe só em videos.thumbnail_url — capas próprias (content.thumbnail_url) não são tocadas.
+ */
+export async function renovarMiniaturasYoutube(contentId?: string): Promise<number> {
+  const supabase = createServiceClient();
+  let consulta = supabase.from("content").select("video_id, videos!inner(id, provider, provider_video_id)");
+  if (contentId) consulta = consulta.eq("id", contentId);
+  const { data, error } = await consulta.eq("videos.provider", "youtube");
+  if (error) throw error;
+
+  type Linha = { videos: { id: string; provider_video_id: string } | null };
+  const videos = new Map<string, string>();
+  for (const l of (data ?? []) as unknown as Linha[]) if (l.videos) videos.set(l.videos.id, l.videos.provider_video_id);
+
+  let atualizados = 0;
+  for (const [id, youtubeId] of videos) {
+    try {
+      const url = await copiarMiniaturaYoutube(youtubeId);
+      const { error: erro } = await supabase.from("videos").update({ thumbnail_url: url }).eq("id", id);
+      if (!erro) atualizados++;
+    } catch {
+      // um vídeo sem miniatura disponível não impede os outros de serem renovados
+    }
+  }
+  if (atualizados === 0 && videos.size > 0) throw new Error("Não consegui buscar as miniaturas no YouTube agora. Tente de novo em instantes.");
+  return atualizados;
 }
