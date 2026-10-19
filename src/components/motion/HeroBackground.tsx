@@ -1,3 +1,4 @@
+import { Estrelas } from "@/components/marca/Estrelas";
 import { Aurora } from "@/components/motion/HeroMotion";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +12,7 @@ export function HeroBackground({ className }: { className?: string }) {
   return (
     <div aria-hidden className={cn("absolute inset-0 overflow-hidden", className)}>
       <div className="absolute inset-0 bg-gradient-to-br from-brand-blue-dark via-[#0c1d3a] to-background" />
+      <Estrelas />
       <Aurora />
       <div className="absolute inset-0 [mask-image:radial-gradient(ellipse_80%_70%_at_30%_45%,#000_15%,transparent_78%)]">
         <div className="grade-fundo" />

@@ -5,6 +5,9 @@ import { ContentRow } from "@/components/home/ContentRow";
 import { CatalogoRow, type ProgressoPorSlug } from "@/components/home/CatalogoRow";
 import { CategoryFilter } from "@/components/home/CategoryFilter";
 import { ContinueCard } from "@/components/home/ContinueCard";
+import { Ecossistema } from "@/components/home/Ecossistema";
+import { Jornada } from "@/components/home/Jornada";
+import { ParceirosFaixa } from "@/components/home/ParceirosFaixa";
 import { Beneficios, ConviteFinal, FaixaCategorias, StatsStrip } from "@/components/home/VisitorSections";
 import { MinhaListaProvider } from "@/components/lista/MinhaListaProvider";
 import { Container } from "@/components/ui/Container";
@@ -122,6 +125,9 @@ export default async function Home() {
         {!user && (
           <>
             <Beneficios />
+            <Jornada />
+            <Ecossistema />
+            <ParceirosFaixa />
             <FaixaCategorias nomes={categories.map((c) => c.name)} />
             <ConviteFinal />
           </>

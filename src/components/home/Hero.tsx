@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { PlayIcon } from "@/components/icons";
 import { HeroVideoCard } from "@/components/home/HeroVideoCard";
+import { AstronautaHero } from "@/components/marca/AstronautaHero";
 import { HeroBackground } from "@/components/motion/HeroBackground";
 import { HeroFade, Magnetic, ScrollHint, WordReveal } from "@/components/motion/HeroMotion";
 import { getHeroContent } from "@/lib/data/content";
@@ -82,6 +83,7 @@ export async function Hero() {
         />
       </Container>
 
+      <AstronautaHero />
       <ScrollHint />
     </section>
   );

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Container } from "@/components/ui/Container";
+import { AstronautaCanto } from "@/components/marca/AstronautaCanto";
+import { Estrelas } from "@/components/marca/Estrelas";
 import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { Reveal, Stagger } from "@/components/motion/Reveal";
 import { TiltCard } from "@/components/motion/TiltCard";
@@ -153,7 +155,10 @@ export function ConviteFinal() {
         <Reveal>
           <div className="relative overflow-hidden rounded-3xl p-px">
             <span aria-hidden className="borda-giratoria absolute inset-[-100%]" />
-            <div className="relative rounded-[calc(1.5rem-1px)] bg-surface px-6 py-10 text-center sm:px-12 sm:py-14">
+            <div className="relative overflow-hidden rounded-[calc(1.5rem-1px)] bg-surface px-6 py-10 text-center sm:px-12 sm:py-14">
+              <Estrelas className="opacity-70" />
+              <AstronautaCanto src="/mascote/astronauta-acenando.webp" largura={420} altura={660} lado="esquerda" className="-left-2 bottom-0 w-36" />
+              <div className="relative z-10">
               <h2 className="mx-auto max-w-xl text-2xl font-bold tracking-tight text-foreground text-balance sm:text-3xl">
                 Faça sua loja aprender mais rápido
               </h2>
@@ -177,6 +182,7 @@ export function ConviteFinal() {
                     Já tenho acesso
                   </Link>
                 </Magnetic>
+              </div>
               </div>
             </div>
           </div>
