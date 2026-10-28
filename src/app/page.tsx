@@ -11,7 +11,7 @@ import { ParceirosFaixa } from "@/components/home/ParceirosFaixa";
 import { Beneficios, ConviteFinal, FaixaCategorias, StatsStrip } from "@/components/home/VisitorSections";
 import { MinhaListaProvider } from "@/components/lista/MinhaListaProvider";
 import { Container } from "@/components/ui/Container";
-import { getSessionUser } from "@/lib/auth";
+import { getPerfilCabecalho, getUsuarioRapido } from "@/lib/auth";
 import {
   getCategories,
   getContents,
@@ -30,11 +30,13 @@ const rowCardClass = "w-[260px] shrink-0 sm:w-[280px]";
 const HOME_ROW_SLUGS = ["vendas", "gestao", "marketing", "lideranca"];
 
 export default async function Home() {
+  // O cabeçalho só renderiza depois dos dados abaixo; começar a consulta dele agora tira uma ida ao banco da fila.
+  void getPerfilCabecalho();
   const [featured, lives, categories, user, todos] = await Promise.all([
     getFeaturedContent(),
     getLives(),
     getCategories(),
-    getSessionUser(),
+    getUsuarioRapido(),
     getContents(),
   ]);
   // Logado: "Continuar assistindo" e "Minha lista" no topo. Visitante: números do catálogo e convite no fim da página.

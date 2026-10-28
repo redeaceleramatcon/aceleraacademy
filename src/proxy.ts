@@ -36,10 +36,11 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  // getUser valida o token no Supabase; getSession apenas leria o cookie.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims confere a assinatura do token localmente (chave pública do projeto, em cache) e só vai ao
+  // Supabase quando precisa renovar um token vencido. getUser faria uma chamada de rede em TODO clique.
+  // As páginas protegidas continuam usando getUser (getSessionUser) para a decisão de acesso.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const user = claimsData?.claims ? claimsData.claims : null;
 
   const { pathname } = request.nextUrl;
   const protegida = ROTAS_PROTEGIDAS.some(

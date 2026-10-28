@@ -1,4 +1,5 @@
 import { Header } from "@/components/layout/Header";
+import { getPerfilCabecalho } from "@/lib/auth";
 import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { CategoryFilter } from "@/components/home/CategoryFilter";
@@ -13,6 +14,7 @@ export default async function ConteudosPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
+  void getPerfilCabecalho();
   const { q } = await searchParams;
   const items = await getContents({ query: q?.trim() });
 

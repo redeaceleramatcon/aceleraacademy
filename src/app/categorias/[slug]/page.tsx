@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
+import { getPerfilCabecalho } from "@/lib/auth";
 import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { CategoryFilter } from "@/components/home/CategoryFilter";
@@ -14,6 +15,7 @@ export default async function CategoriaPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  void getPerfilCabecalho();
   const { slug } = await params;
   const category = await getCategoryBySlug(slug);
   if (!category) notFound();

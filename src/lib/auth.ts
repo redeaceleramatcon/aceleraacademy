@@ -36,6 +36,27 @@ export const getSessionUser = cache(async () => {
   return user;
 });
 
+/**
+ * Leitura rápida da sessão, SÓ para exibição e consultas já protegidas por RLS (cabeçalho, catálogo, progresso).
+ * Confere o token localmente (getClaims) em vez de perguntar ao Supabase a cada página. Quem decide acesso
+ * (admin, equipe, ações do servidor) continua usando `getSessionUser`, que valida no servidor de autenticação.
+ */
+export const getUsuarioRapido = cache(async () => {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  return claims?.sub ? { id: claims.sub, email: typeof claims.email === "string" ? claims.email : "" } : null;
+});
+
+/** Nome e e-mail para o cabeçalho: uma consulta só (profiles), sem os vínculos de loja. */
+export const getPerfilCabecalho = cache(async () => {
+  const usuario = await getUsuarioRapido();
+  if (!usuario) return null;
+  const supabase = await createClient();
+  const { data } = await supabase.from("profiles").select("full_name").eq("id", usuario.id).maybeSingle();
+  return { name: displayName({ fullName: data?.full_name ?? null, email: usuario.email }), email: usuario.email };
+});
+
 export const getSessionProfile = cache(async (): Promise<SessionProfile | null> => {
   const user = await getSessionUser();
   if (!user) return null;
