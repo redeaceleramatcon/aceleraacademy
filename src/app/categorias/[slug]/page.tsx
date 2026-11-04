@@ -10,6 +10,9 @@ import { getCategoryBySlug, getContentsByCategory } from "@/lib/data/content";
 
 export const revalidate = 60;
 
+// Categorias com apresentação própria (a aba "Plataforma Monitor" explica os módulos do sistema).
+const PLATAFORMA_MONITOR = "plataforma-monitor";
+
 export default async function CategoriaPage({
   params,
 }: {
@@ -28,11 +31,16 @@ export default async function CategoriaPage({
       <main className="pt-24 sm:pt-28">
         <Container className="pb-6 pt-2 sm:pb-10 sm:pt-4">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-blue-light">
-            Categoria
+            {slug === PLATAFORMA_MONITOR ? "Plataforma" : "Categoria"}
           </p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             {category.name}
           </h1>
+          {slug === PLATAFORMA_MONITOR && (
+            <p className="mt-3 max-w-2xl text-sm text-muted sm:text-base">
+              Vídeos curtos que mostram, módulo por módulo, como usar o Monitor da Rede Acelera Matcon no dia a dia da sua loja.
+            </p>
+          )}
           <p className="mt-2 text-sm text-muted">
             {items.length} {items.length === 1 ? "conteúdo" : "conteúdos"}
           </p>
@@ -49,7 +57,9 @@ export default async function CategoriaPage({
 
           {items.length === 0 && (
             <p className="mt-16 text-center text-sm text-muted">
-              Ainda não há conteúdos nesta categoria.
+              {slug === PLATAFORMA_MONITOR
+                ? "Em breve: vídeos explicando cada módulo do Monitor."
+                : "Ainda não há conteúdos nesta categoria."}
             </p>
           )}
         </Container>

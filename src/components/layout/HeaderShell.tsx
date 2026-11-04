@@ -15,13 +15,17 @@ export interface HeaderUser {
   email: string;
 }
 
+const ROTA_MONITOR = "/categorias/plataforma-monitor";
+
+// "Categorias" não acende quando a aba "Plataforma Monitor" (que também mora em /categorias) está aberta.
 const publicLinks = [
-  { href: "/", label: "Início" },
-  { href: "/conteudos", label: "Conteúdos" },
-  { href: "/categorias/vendas", label: "Categorias" },
+  { href: "/", label: "Início", ativoEm: (p: string) => p === "/" },
+  { href: "/conteudos", label: "Conteúdos", ativoEm: (p: string) => p.startsWith("/conteudos") },
+  { href: "/categorias/vendas", label: "Categorias", ativoEm: (p: string) => p.startsWith("/categorias") && !p.startsWith(ROTA_MONITOR) },
+  { href: ROTA_MONITOR, label: "Plataforma Monitor", ativoEm: (p: string) => p.startsWith(ROTA_MONITOR) },
 ];
 
-const areaLink = { href: "/minha-area", label: "Minha área" };
+const areaLink = { href: "/minha-area", label: "Minha área", ativoEm: (p: string) => p.startsWith("/minha-area") };
 
 export function HeaderShell({ user }: { user: HeaderUser | null }) {
   const [scrolled, setScrolled] = useState(false);
@@ -58,7 +62,7 @@ export function HeaderShell({ user }: { user: HeaderUser | null }) {
             </Link>
             <nav className="hidden items-center gap-1 lg:flex" onMouseLeave={() => setNavHover(null)}>
               {navLinks.map((link) => {
-                const ativo = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href.split("/").slice(0, 2).join("/"));
+                const ativo = link.ativoEm(pathname);
                 return (
                   <Link
                     key={link.href}
