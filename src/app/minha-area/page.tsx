@@ -17,6 +17,7 @@ import { CatalogoRow } from "@/components/home/CatalogoRow";
 import { MinhaListaProvider } from "@/components/lista/MinhaListaProvider";
 import { signOut } from "@/app/login/actions";
 import { TrocarSenhaForm } from "./TrocarSenhaForm";
+import { formatarData } from "@/lib/datas";
 
 /**
  * Área do associado — exige sessão e pelo menos um vínculo ativo.
@@ -96,7 +97,7 @@ export default async function MinhaAreaPage() {
   const primeiroNome = nome.split(" ")[0];
 
   const membroDesde = profile.createdAt
-    ? new Date(profile.createdAt).toLocaleDateString("pt-BR", {
+    ? formatarData(profile.createdAt, {
         month: "long",
         year: "numeric",
       })

@@ -8,6 +8,7 @@ import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/Reveal";
 import { getSessionUser } from "@/lib/auth";
 import { buscarAtividade } from "@/lib/atividade";
+import { formatarData, formatarDataHora } from "@/lib/datas";
 
 const rotuloEvento: Record<string, string> = {
   page_view: "Visitou página",
@@ -70,7 +71,7 @@ export default async function AtividadePage({
             <StaggerItem className="border-l-2 border-brand-blue-light pl-4">
               <p className="text-3xl font-bold tracking-tight text-foreground">
                 {atividade.ultimoAcesso
-                  ? new Date(atividade.ultimoAcesso).toLocaleDateString("pt-BR")
+                  ? formatarData(atividade.ultimoAcesso)
                   : "—"}
               </p>
               <p className="mt-1.5 text-xs uppercase tracking-wide text-subtle">Último acesso</p>
@@ -101,7 +102,7 @@ export default async function AtividadePage({
                         </div>
                       </td>
                       <td className="px-4 py-3 text-right text-xs text-subtle">
-                        {new Date(p.ultimoAcesso).toLocaleDateString("pt-BR")}
+                        {formatarData(p.ultimoAcesso)}
                       </td>
                     </tr>
                   ))}
@@ -122,7 +123,7 @@ export default async function AtividadePage({
                       <td className="px-4 py-2 text-foreground">{rotuloEvento[e.tipo] ?? e.tipo}</td>
                       <td className="px-4 py-2 text-muted">{e.pagina ?? "—"}</td>
                       <td className="px-4 py-2 text-right text-xs text-subtle">
-                        {new Date(e.criadoEm).toLocaleString("pt-BR")}
+                        {formatarDataHora(e.criadoEm)}
                       </td>
                     </tr>
                   ))}
