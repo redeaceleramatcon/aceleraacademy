@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { apenasDigitos, verificarCnpjNoAdm } from "@/lib/adm";
-import { criarVinculoMaster } from "@/lib/vinculos";
+import { criarVinculoMaster, lojaTemMasterAtivo } from "@/lib/vinculos";
 
 export interface SignUpState {
   error?: string;
@@ -12,10 +12,10 @@ export interface SignUpState {
 }
 
 /**
- * Cadastro do "acesso master": só quem tem o e-mail cadastrado como
- * responsável do CNPJ no ADM consegue se cadastrar por aqui — não existe
- * aprovação nem solicitação. Quem não é o responsável não se auto-cadastra;
- * pede para o master da loja te cadastrar como funcionário dentro da Academy.
+ * Primeiro acesso da loja: basta o CNPJ de uma loja ativa na Rede (cadastro no
+ * CRM). O lojista escolhe o e-mail e a senha que quiser; o primeiro a se
+ * cadastrar vira o "acesso master" da loja e convida a equipe depois. Quem chega
+ * depois do master pede para ele cadastrar como funcionário (Minha equipe).
  */
 export async function signUp(_prev: SignUpState, formData: FormData): Promise<SignUpState> {
   const nome = String(formData.get("full_name") ?? "").trim();
@@ -41,19 +41,20 @@ export async function signUp(_prev: SignUpState, formData: FormData): Promise<Si
     };
   }
 
-  // Mesma mensagem para CNPJ não encontrado, loja inativa e e-mail que não é o
-  // responsável — evita que alguém descubra, tentando um a um, quais CNPJs
-  // pertencem à Rede ou quem é o responsável de cada um.
-  const mensagemNaoElegivel =
-    "Não encontramos uma loja ativa da Rede com o e-mail de responsável informado. " +
-    "Confira o CNPJ e o e-mail cadastrado como responsável no ADM — ou, se você é " +
-    "funcionário, peça para o responsável da loja te cadastrar dentro da Academy.";
-
-  if (!verificacao.elegivel || !verificacao.emailMaster) {
-    return { error: mensagemNaoElegivel };
+  if (!verificacao.elegivel) {
+    return {
+      error:
+        "Não encontramos uma loja ativa da Rede com esse CNPJ. Confira os números ou fale com o suporte da Rede. " +
+        "Se você é funcionário, peça para o responsável da loja te cadastrar em Minha equipe.",
+    };
   }
-  if (verificacao.emailMaster.trim().toLowerCase() !== email) {
-    return { error: mensagemNaoElegivel };
+
+  if (await lojaTemMasterAtivo(cnpj)) {
+    return {
+      error:
+        "Essa loja já tem um responsável na Academy. Peça para ele te cadastrar em Minha equipe " +
+        "ou fale com o suporte da Rede.",
+    };
   }
 
   const supabase = await createClient();

@@ -24,6 +24,19 @@ function urlConvite(): string {
  * chamada falha aqui e o cadastro já criado em auth.users fica sem vínculo;
  * a pessoa loga normalmente depois, mas cai na tela de "sem acesso".
  */
+/** Uma loja tem um único master ativo (índice único no banco); este teste evita criar conta à toa. */
+export async function lojaTemMasterAtivo(lojaCnpj: string): Promise<boolean> {
+  const supabase = createServiceClient();
+  const { data } = await supabase
+    .from("academy_vinculos")
+    .select("id")
+    .eq("loja_cnpj", lojaCnpj)
+    .eq("papel", "master")
+    .eq("status", "ativo")
+    .limit(1);
+  return (data?.length ?? 0) > 0;
+}
+
 export async function criarVinculoMaster(userId: string, lojaCnpj: string) {
   const supabase = createServiceClient();
   const { error } = await supabase.from("academy_vinculos").insert({

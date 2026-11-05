@@ -29,9 +29,9 @@ export default async function CadastroPage() {
               Criar acesso da sua loja
             </h1>
             <p className="mt-2 text-sm text-muted">
-              Este cadastro é para o responsável cadastrado no ADM da Rede — quem depois convida
-              a própria equipe para a Academy. Se você é funcionário, peça para o responsável da
-              sua loja te cadastrar.
+              Informe o CNPJ da sua loja da Rede, escolha o e-mail e a senha que quiser usar e
+              pronto: você entra na hora e depois convida a sua equipe. Se você é funcionário, peça
+              para o responsável da loja te cadastrar em Minha equipe.
             </p>
 
             <SignUpForm />

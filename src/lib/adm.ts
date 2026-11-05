@@ -1,6 +1,6 @@
 /**
  * Ponte entre a Academy e o ADM (AceleraMatCon) para descobrir se um CNPJ
- * pertence a uma loja ativa da Rede e qual e-mail é o "acesso master" dela.
+ * pertence a uma loja ativa da Rede (cadastro no CRM).
  *
  * Só roda no servidor: as variáveis abaixo não têm prefixo NEXT_PUBLIC_ e
  * portanto nunca chegam ao navegador.
@@ -8,11 +8,9 @@
 export interface VerificacaoCnpj {
   /** Status real da loja no ADM — usado sozinho na revalidação de login. */
   ativo: boolean;
-  /** ativo && tem e-mail de master — usado para decidir o cadastro. */
+  /** Loja ativa na Rede (CRM) — é o que libera o cadastro do responsável. */
   elegivel: boolean;
   nomeLoja?: string;
-  /** E-mail do associado no ADM — vira o "acesso master" no primeiro acesso. */
-  emailMaster?: string;
   /** Preenchido quando a verificação não pôde ser concluída (ADM fora do ar). */
   indisponivel?: boolean;
 }
@@ -57,20 +55,15 @@ export async function verificarCnpjNoAdm(cnpjBruto: string): Promise<Verificacao
       ativo?: boolean;
       elegivel?: boolean;
       nomeLoja?: string;
-      emailMaster?: string;
     };
 
     const ativo = Boolean(corpo.ativo);
 
-    if (!corpo.elegivel || !corpo.emailMaster) {
-      // Loja ativa sem e-mail cadastrado no ADM cai aqui também: bloqueia e
-      // deixa a tela orientar contato com o suporte — não há pra quem mandar
-      // o convite de master. `ativo` continua refletindo o status real, pra
-      // quem só precisa saber isso (revalidação de login).
+    if (!ativo || !corpo.elegivel) {
       return { ativo, elegivel: false };
     }
 
-    return { ativo: true, elegivel: true, nomeLoja: corpo.nomeLoja, emailMaster: corpo.emailMaster };
+    return { ativo: true, elegivel: true, nomeLoja: corpo.nomeLoja };
   } catch (erro) {
     console.error("Falha ao falar com o ADM:", erro);
     return { ativo: false, elegivel: false, indisponivel: true };

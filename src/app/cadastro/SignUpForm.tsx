@@ -67,7 +67,7 @@ export function SignUpForm() {
 
       <div>
         <label htmlFor="email" className={labelClass}>
-          E-mail
+          E-mail para entrar
         </label>
         <input
           id="email"
@@ -75,7 +75,7 @@ export function SignUpForm() {
           type="email"
           autoComplete="email"
           required
-          placeholder="o e-mail cadastrado como responsável no ADM"
+          placeholder="o e-mail que você quer usar na Academy"
           className={inputClass}
         />
       </div>
