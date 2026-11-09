@@ -1,4 +1,5 @@
-import { getPerfilCabecalho } from "@/lib/auth";
+import { getPerfilCabecalho, getVerComoColaborador } from "@/lib/auth";
+import { FaixaVerComo } from "@/components/layout/FaixaVerComo";
 import { HeaderShell } from "@/components/layout/HeaderShell";
 
 /**
@@ -10,7 +11,12 @@ import { HeaderShell } from "@/components/layout/HeaderShell";
  * ao perfil): o cabeçalho só exibe nome e e-mail, não decide acesso.
  */
 export async function Header() {
-  const perfil = await getPerfilCabecalho();
+  const [perfil, verComoColaborador] = await Promise.all([getPerfilCabecalho(), getVerComoColaborador()]);
 
-  return <HeaderShell user={perfil} />;
+  return (
+    <>
+      <HeaderShell user={perfil} />
+      {verComoColaborador && <FaixaVerComo />}
+    </>
+  );
 }

@@ -1,5 +1,7 @@
 import { cache } from "react";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { podePublicarConteudo } from "@/lib/atividade";
 
 /**
  * Ponto único de leitura da sessão no servidor.
@@ -54,15 +56,32 @@ export const getUsuarioRapido = cache(async () => {
  * Não decide acesso: quem decide é o RLS no banco, que valida o token.
  */
 export const getTokenCatalogo = cache(async (): Promise<string | undefined> => {
+  // Admin/editor no modo "ver como colaborador": o catálogo sai como o de quem não é lojista.
+  if (await getVerComoColaborador()) return undefined;
   const supabase = await createClient();
   const { data } = await supabase.auth.getSession();
   return data.session?.access_token ?? undefined;
+});
+
+/** Cookie do modo "ver como colaborador" (só admin e editor; para conferir o que a equipe das lojas enxerga). */
+export const COOKIE_VER_COMO = "ver_como";
+
+/**
+ * Admin ou editor que escolheu ver o site como um colaborador. O cookie sozinho não vale nada: só é
+ * honrado para quem realmente é admin/editor (e o modo só REDUZ o que a pessoa vê, nunca amplia).
+ */
+export const getVerComoColaborador = cache(async (): Promise<boolean> => {
+  const jar = await cookies();
+  if (jar.get(COOKIE_VER_COMO)?.value !== "colaborador") return false;
+  const usuario = await getUsuarioRapido();
+  return !!usuario && (await podePublicarConteudo(usuario.id));
 });
 
 export type PapelAcademy = "visitante" | "colaborador" | "lojista";
 
 /** Papel de quem está logado: lojista (master, interno, editor, admin), colaborador (funcionário) ou visitante. */
 export const getPapel = cache(async (): Promise<PapelAcademy> => {
+  if (await getVerComoColaborador()) return "colaborador";
   const supabase = await createClient();
   const { data } = await supabase.rpc("academy_meu_papel");
   return data === "lojista" || data === "colaborador" ? data : "visitante";

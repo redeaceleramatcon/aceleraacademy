@@ -8,7 +8,8 @@ import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { ProgressRing } from "@/components/motion/ProgressRing";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/Reveal";
 import { ContinueCard } from "@/components/home/ContinueCard";
-import { getSessionProfile, getTokenCatalogo, displayName } from "@/lib/auth";
+import { getSessionProfile, getTokenCatalogo, getVerComoColaborador, displayName } from "@/lib/auth";
+import { VerComoSeletor } from "@/components/layout/VerComoSeletor";
 import { ehAdmin, ehEditor } from "@/lib/atividade";
 import { getContents } from "@/lib/data/content";
 import { meuProgresso } from "@/lib/meu-progresso";
@@ -39,7 +40,8 @@ export default async function MinhaAreaPage() {
   const ehMaster = profile.vinculos.some((v) => v.papel === "master");
   const [admin, editor] = await Promise.all([ehAdmin(profile.id), ehEditor(profile.id)]);
   // Colaborador = só tem vínculo de funcionário (cadastrado pelo responsável da loja): painel próprio, só com o treinamento.
-  const ehColaborador = !admin && !editor && profile.vinculos.length > 0 && profile.vinculos.every((v) => v.papel === "funcionario");
+  const verComoColaborador = (admin || editor) && (await getVerComoColaborador());
+  const ehColaborador = verComoColaborador || (!admin && !editor && profile.vinculos.length > 0 && profile.vinculos.every((v) => v.papel === "funcionario"));
 
   // Admin/editor sem nenhum vínculo (só existe em academy_admins/editores)
   // ainda tem motivo legítimo de estar logado — não cai na tela de "sem acesso".
@@ -155,6 +157,7 @@ export default async function MinhaAreaPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
+              {(admin || editor) && <VerComoSeletor atual={verComoColaborador ? "colaborador" : "lojista"} />}
               {(admin || editor) && (
                 <Link href="/admin/conteudos/novo" className={botao}>
                   Novo conteúdo
