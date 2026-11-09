@@ -11,7 +11,7 @@ import { ParceirosFaixa } from "@/components/home/ParceirosFaixa";
 import { Beneficios, ConviteFinal, FaixaCategorias, StatsStrip } from "@/components/home/VisitorSections";
 import { MinhaListaProvider } from "@/components/lista/MinhaListaProvider";
 import { Container } from "@/components/ui/Container";
-import { getPerfilCabecalho, getUsuarioRapido } from "@/lib/auth";
+import { getPerfilCabecalho, getTokenCatalogo, getUsuarioRapido } from "@/lib/auth";
 import {
   getCategories,
   getContents,
@@ -32,12 +32,14 @@ const HOME_ROW_SLUGS = ["vendas", "gestao", "marketing", "lideranca"];
 export default async function Home() {
   // O cabeçalho só renderiza depois dos dados abaixo; começar a consulta dele agora tira uma ida ao banco da fila.
   void getPerfilCabecalho();
+  // Token da pessoa logada: o catálogo mostra o que o papel dela permite (o colaborador não vê o que é só do lojista).
+  const token = await getTokenCatalogo();
   const [featured, lives, categories, user, todos] = await Promise.all([
-    getFeaturedContent(),
-    getLives(),
+    getFeaturedContent(token),
+    getLives(token),
     getCategories(),
     getUsuarioRapido(),
-    getContents(),
+    getContents({ token }),
   ]);
   // Logado: "Continuar assistindo" e "Minha lista" no topo. Visitante: números do catálogo e convite no fim da página.
   const [progresso, salvos] = user
@@ -54,7 +56,7 @@ export default async function Home() {
       HOME_ROW_SLUGS.map(async (slug) => {
         const category = categories.find((item) => item.slug === slug);
         if (!category) return null;
-        const items = await getContentsByCategory(slug);
+        const items = await getContentsByCategory(slug, token);
         return items.length > 0 ? { category, items } : null;
       }),
     )

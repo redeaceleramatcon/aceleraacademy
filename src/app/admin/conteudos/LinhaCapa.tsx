@@ -5,6 +5,7 @@ import { CapaUploader } from "@/components/admin/CapaUploader";
 import { FormFeedback } from "@/components/motion/FormFeedback";
 import { Spinner } from "@/components/ui/Spinner";
 import { BotaoRenovar } from "./BotaoRenovar";
+import { PublicoAlvoSelect } from "./PublicoAlvoSelect";
 import type { ConteudoParaCapa } from "@/lib/conteudo";
 import { trocarCapa, type TrocarCapaState } from "./actions";
 
@@ -44,6 +45,10 @@ export function LinhaCapa({ item }: { item: ConteudoParaCapa }) {
             </>
           )}
         </span>
+      </div>
+
+      <div className="mt-3">
+        <PublicoAlvoSelect contentId={item.id} inicial={item.audience} />
       </div>
 
       <form action={formAction} className="mt-4 flex flex-wrap items-center justify-between gap-4">

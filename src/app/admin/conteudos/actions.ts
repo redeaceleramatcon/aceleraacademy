@@ -4,7 +4,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { getSessionUser } from "@/lib/auth";
 import { podePublicarConteudo } from "@/lib/atividade";
 import { enviarCapa } from "@/lib/capas";
-import { criarConteudoYoutube, definirCapa, renovarMiniaturasYoutube, type NovoConteudoInput } from "@/lib/conteudo";
+import { criarConteudoYoutube, definirCapa, definirPublicoAlvo, renovarMiniaturasYoutube, type NovoConteudoInput } from "@/lib/conteudo";
 
 export interface NovoConteudoState {
   error?: string;
@@ -35,6 +35,9 @@ export async function criarConteudo(
   const categorySlug = String(formData.get("category_slug") ?? "").trim();
   const contentType = String(formData.get("content_type") ?? "").trim();
   const visibility = formData.get("visibility") === "associates" ? "associates" : "public";
+  const audienceBruto = String(formData.get("audience") ?? "ambos");
+  const audience: NovoConteudoInput["audience"] =
+    audienceBruto === "lojista" || audienceBruto === "colaborador" ? audienceBruto : "ambos";
   const mentorId = String(formData.get("mentor_id") ?? "").trim();
   const mentorNomeNovo = String(formData.get("mentor_nome_novo") ?? "").trim();
   const publicarAgora = formData.get("publicar_agora") === "on";
@@ -59,6 +62,7 @@ export async function criarConteudo(
       categorySlug,
       contentType: contentType as NovoConteudoInput["contentType"],
       visibility,
+      audience,
       mentorId: mentorId || undefined,
       mentorNomeNovo: mentorNomeNovo || undefined,
       publicarAgora,
@@ -138,5 +142,29 @@ export async function renovarMiniaturas(contentId: string | null): Promise<Renov
     return { aviso: n === 1 ? "Miniatura renovada." : `${n} miniaturas renovadas a partir do YouTube.` };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Não foi possível renovar agora. Tente novamente." };
+  }
+}
+
+export interface PublicoAlvoState {
+  error?: string;
+  aviso?: string;
+}
+
+/** Muda para quem um conteúdo que já existe é (lojista, colaborador ou ambos). Admin ou editor. */
+export async function trocarPublicoAlvo(contentId: string, audience: string): Promise<PublicoAlvoState> {
+  const user = await getSessionUser();
+  if (!user) return { error: "Sua sessão expirou. Entre novamente." };
+  if (!(await podePublicarConteudo(user.id))) return { error: "Você não tem acesso a esta área." };
+  if (audience !== "lojista" && audience !== "colaborador" && audience !== "ambos") return { error: "Opção inválida." };
+
+  try {
+    await definirPublicoAlvo(contentId, audience);
+    updateTag("catalogo"); // o catálogo de cada pessoa se atualiza já
+    revalidatePath("/");
+    revalidatePath("/conteudos");
+    revalidatePath("/admin/conteudos");
+    return { aviso: "Salvo." };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Não foi possível salvar agora. Tente novamente." };
   }
 }

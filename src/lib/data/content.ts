@@ -1,8 +1,9 @@
 import { unstable_cache } from "next/cache";
-import { supabasePublic } from "@/lib/supabase/public";
+import { supabasePublic, supabaseComToken } from "@/lib/supabase/public";
 import type {
   Category,
   ContentDetail,
+  PublicoAlvo,
   ContentItem,
   ContentMaterial,
   ContentModule,
@@ -67,6 +68,7 @@ export type ContentRow = {
   duration_seconds: number | null;
   thumbnail_url: string | null;
   is_featured?: boolean;
+  audience?: string;
   categories?: CategoryRow;
   partners?: PartnerRow;
   videos?: VideoRow;
@@ -100,6 +102,7 @@ export function toContentItem(row: ContentRow): ContentItem {
     image: row.thumbnail_url ?? row.videos?.thumbnail_url ?? FALLBACK_IMAGE,
     partner: row.partners?.name ?? undefined,
     featured: row.is_featured ?? false,
+    audience: (row.audience as PublicoAlvo | undefined) ?? "ambos",
   };
 }
 
@@ -110,7 +113,7 @@ export function toContentItem(row: ContentRow): ContentItem {
 /** Campos de card. `categories(...)` etc. vêm das FKs declaradas no schema. */
 export const LIST_SELECT = `
   id, slug, title, description, content_type, duration_seconds, thumbnail_url,
-  is_featured, published_at,
+  is_featured, audience, published_at,
   categories ( slug, name ),
   partners ( name ),
   videos ( thumbnail_url ),
@@ -125,7 +128,7 @@ export const LIST_SELECT = `
  */
 const DETAIL_SELECT = `
   id, slug, title, description, content_type, duration_seconds, thumbnail_url,
-  is_featured, published_at,
+  is_featured, audience, published_at,
   categories ( slug, name ),
   partners ( name ),
   videos ( provider, provider_video_id, playback_url, thumbnail_url, status ),
@@ -136,6 +139,11 @@ const DETAIL_SELECT = `
   ),
   content_materials ( title, type, url, order_index )
 `;
+
+/** Sem token = visitante (chave pública). Com token = a pessoa logada, e o RLS decide o que ela enxerga. */
+function cliente(token?: string) {
+  return token ? supabaseComToken(token) : supabasePublic;
+}
 
 function fail(context: string, message: string): never {
   throw new Error(`Falha ao carregar ${context}: ${message}`);
@@ -171,6 +179,7 @@ async function _getContents(options?: {
   query?: string;
   category?: string;
   limit?: number;
+  token?: string;
 }): Promise<ContentItem[]> {
   // `categories!inner` transforma o join em filtro obrigatório quando há
   // categoria. O select sai tipado como `string` de propósito: com a string
@@ -180,7 +189,7 @@ async function _getContents(options?: {
     ? LIST_SELECT.replace("categories (", "categories!inner (")
     : LIST_SELECT;
 
-  let request = supabasePublic
+  let request = cliente(options?.token)
     .from("content")
     .select(select)
     .eq("status", "published")
@@ -204,13 +213,13 @@ async function _getContents(options?: {
   return ((data ?? []) as unknown as ContentRow[]).map(toContentItem);
 }
 
-async function _getContentsByCategory(slug: string): Promise<ContentItem[]> {
-  return getContents({ category: slug });
+async function _getContentsByCategory(slug: string, token?: string): Promise<ContentItem[]> {
+  return getContents({ category: slug, token });
 }
 
 /** Fileira "Conteúdos em destaque" — controlada por content.is_featured. */
-async function _getFeaturedContent(limit = 12): Promise<ContentItem[]> {
-  const { data, error } = await supabasePublic
+async function _getFeaturedContent(token?: string, limit = 12): Promise<ContentItem[]> {
+  const { data, error } = await cliente(token)
     .from("content")
     .select(LIST_SELECT)
     .eq("status", "published")
@@ -227,8 +236,8 @@ async function _getFeaturedContent(limit = 12): Promise<ContentItem[]> {
  * Retorna null quando não há slot ativo ou o conteúdo apontado não está
  * publicado (nesse caso o RLS devolve o vínculo sem conteúdo).
  */
-async function _getHeroContent(): Promise<ContentItem | null> {
-  const { data, error } = await supabasePublic
+async function _getHeroContent(token?: string): Promise<ContentItem | null> {
+  const { data, error } = await cliente(token)
     .from("featured_slots")
     .select(`slot, active, content ( ${LIST_SELECT} )`)
     .eq("slot", "hero")
@@ -241,8 +250,8 @@ async function _getHeroContent(): Promise<ContentItem | null> {
   return row ? toContentItem(row) : null;
 }
 
-async function _getLives(limit = 12): Promise<ContentItem[]> {
-  const { data, error } = await supabasePublic
+async function _getLives(token?: string, limit = 12): Promise<ContentItem[]> {
+  const { data, error } = await cliente(token)
     .from("content")
     .select(LIST_SELECT)
     .eq("status", "published")
@@ -254,8 +263,8 @@ async function _getLives(limit = 12): Promise<ContentItem[]> {
   return ((data ?? []) as unknown as ContentRow[]).map(toContentItem);
 }
 
-async function _getContentBySlug(slug: string): Promise<ContentDetail | null> {
-  const { data, error } = await supabasePublic
+async function _getContentBySlug(slug: string, token?: string): Promise<ContentDetail | null> {
+  const { data, error } = await cliente(token)
     .from("content")
     .select(DETAIL_SELECT)
     .eq("slug", slug)
@@ -336,10 +345,11 @@ async function _getContentBySlug(slug: string): Promise<ContentDetail | null> {
 async function _getRelatedContent(
   categorySlug: string | undefined,
   excludeSlug: string,
+  token?: string,
   limit = 6,
 ): Promise<ContentItem[]> {
   if (!categorySlug) return [];
-  const items = await getContentsByCategory(categorySlug);
+  const items = await getContentsByCategory(categorySlug, token);
   return items.filter((item) => item.slug !== excludeSlug).slice(0, limit);
 }
 

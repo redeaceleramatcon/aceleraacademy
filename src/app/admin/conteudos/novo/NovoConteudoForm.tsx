@@ -138,6 +138,28 @@ export function NovoConteudoForm({
         </div>
       </div>
 
+      <div>
+        <span className={labelClass}>Visualização</span>
+        <div className="flex flex-col gap-2 text-sm text-foreground sm:flex-row sm:gap-6">
+          <label className="flex items-center gap-2">
+            <input type="radio" name="audience" value="ambos" defaultChecked />
+            Todos (lojistas e colaboradores)
+          </label>
+          <label className="flex items-center gap-2">
+            <input type="radio" name="audience" value="colaborador" />
+            Treinamento da equipe (o lojista também vê)
+          </label>
+          <label className="flex items-center gap-2">
+            <input type="radio" name="audience" value="lojista" />
+            Só lojistas (escondido dos colaboradores)
+          </label>
+        </div>
+        <p className="mt-2 text-xs text-subtle">
+          O lojista sempre vê todos os cursos. O filtro vale só para os colaboradores: eles não veem o que é &quot;Só lojistas&quot;
+          (e quem não está logado também não).
+        </p>
+      </div>
+
       <div className="flex flex-col gap-2 text-sm text-foreground sm:flex-row sm:gap-6">
         <label className="flex items-center gap-2">
           <input type="checkbox" name="publicar_agora" defaultChecked />

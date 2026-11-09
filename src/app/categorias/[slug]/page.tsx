@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
-import { getPerfilCabecalho } from "@/lib/auth";
+import { getPerfilCabecalho, getTokenCatalogo } from "@/lib/auth";
 import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
 import { CategoryFilter } from "@/components/home/CategoryFilter";
@@ -23,7 +23,7 @@ export default async function CategoriaPage({
   const category = await getCategoryBySlug(slug);
   if (!category) notFound();
 
-  const items = await getContentsByCategory(slug);
+  const items = await getContentsByCategory(slug, await getTokenCatalogo());
 
   return (
     <>

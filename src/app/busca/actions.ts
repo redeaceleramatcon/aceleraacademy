@@ -1,5 +1,6 @@
 "use server";
 
+import { getTokenCatalogo } from "@/lib/auth";
 import { getCategories, getContents } from "@/lib/data/content";
 
 export interface ResultadoBusca {
@@ -14,8 +15,9 @@ export interface ResultadoBusca {
  */
 export async function buscarRapido(termo: string): Promise<ResultadoBusca> {
   const q = termo.trim().slice(0, 80);
+  const token = await getTokenCatalogo();
   const [itens, categorias] = await Promise.all([
-    getContents({ query: q || undefined, limit: q ? 6 : 4 }),
+    getContents({ query: q || undefined, limit: q ? 6 : 4, token }),
     getCategories(),
   ]);
 

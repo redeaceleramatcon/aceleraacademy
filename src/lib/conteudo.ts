@@ -111,6 +111,8 @@ export interface NovoConteudoInput {
   categorySlug: string;
   contentType: "course" | "lesson" | "live" | "interview" | "partner" | "webinar";
   visibility: "public" | "associates";
+  /** Para quem o conteúdo é: só o lojista, a equipe (colaborador) ou ambos. */
+  audience: "lojista" | "colaborador" | "ambos";
   mentorId?: string;
   mentorNomeNovo?: string;
   publicarAgora: boolean;
@@ -188,6 +190,7 @@ export async function criarConteudoYoutube(input: NovoConteudoInput): Promise<{ 
       video_id: videoRowId,
       status: input.publicarAgora ? "published" : "draft",
       visibility: input.visibility,
+      audience: input.audience,
       published_at: input.publicarAgora ? agora : null,
       is_featured: input.featured,
     })
@@ -211,6 +214,8 @@ export interface ConteudoParaCapa {
   titulo: string;
   status: "draft" | "published" | "archived";
   categoria: string | null;
+  /** Para quem o conteúdo é (lojista, colaborador ou ambos). */
+  audience: "lojista" | "colaborador" | "ambos";
   /** A imagem que o catálogo mostra hoje (capa própria ou miniatura do YouTube). */
   capaAtual: string | null;
   temCapaPropria: boolean;
@@ -221,7 +226,7 @@ export async function listarConteudosParaCapa(): Promise<ConteudoParaCapa[]> {
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("content")
-    .select("id, slug, title, status, thumbnail_url, categories(name), videos(thumbnail_url)")
+    .select("id, slug, title, status, audience, thumbnail_url, categories(name), videos(thumbnail_url)")
     .order("created_at", { ascending: false });
   if (error) throw error;
 
@@ -230,6 +235,7 @@ export async function listarConteudosParaCapa(): Promise<ConteudoParaCapa[]> {
     slug: string;
     title: string;
     status: ConteudoParaCapa["status"];
+    audience: ConteudoParaCapa["audience"];
     thumbnail_url: string | null;
     categories: { name: string } | null;
     videos: { thumbnail_url: string | null } | null;
@@ -239,10 +245,18 @@ export async function listarConteudosParaCapa(): Promise<ConteudoParaCapa[]> {
     slug: c.slug,
     titulo: c.title,
     status: c.status,
+    audience: c.audience ?? "ambos",
     categoria: c.categories?.name ?? null,
     capaAtual: c.thumbnail_url ?? c.videos?.thumbnail_url ?? null,
     temCapaPropria: !!c.thumbnail_url,
   }));
+}
+
+/** Define para quem o conteúdo é (lojista, colaborador ou ambos). */
+export async function definirPublicoAlvo(contentId: string, audience: "lojista" | "colaborador" | "ambos") {
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("content").update({ audience }).eq("id", contentId);
+  if (error) throw error;
 }
 
 /** Grava (ou troca) a capa própria de um conteúdo. */

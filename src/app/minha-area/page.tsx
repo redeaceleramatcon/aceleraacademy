@@ -8,7 +8,7 @@ import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
 import { ProgressRing } from "@/components/motion/ProgressRing";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/Reveal";
 import { ContinueCard } from "@/components/home/ContinueCard";
-import { getSessionProfile, displayName } from "@/lib/auth";
+import { getSessionProfile, getTokenCatalogo, displayName } from "@/lib/auth";
 import { ehAdmin, ehEditor } from "@/lib/atividade";
 import { getContents } from "@/lib/data/content";
 import { meuProgresso } from "@/lib/meu-progresso";
@@ -38,6 +38,8 @@ export default async function MinhaAreaPage() {
   const nome = displayName(profile);
   const ehMaster = profile.vinculos.some((v) => v.papel === "master");
   const [admin, editor] = await Promise.all([ehAdmin(profile.id), ehEditor(profile.id)]);
+  // Colaborador = só tem vínculo de funcionário (cadastrado pelo responsável da loja): painel próprio, só com o treinamento.
+  const ehColaborador = !admin && !editor && profile.vinculos.length > 0 && profile.vinculos.every((v) => v.papel === "funcionario");
 
   // Admin/editor sem nenhum vínculo (só existe em academy_admins/editores)
   // ainda tem motivo legítimo de estar logado — não cai na tela de "sem acesso".
@@ -85,7 +87,7 @@ export default async function MinhaAreaPage() {
 
   const [progresso, catalogo, salvos] = await Promise.all([
     meuProgresso(profile.id),
-    getContents(),
+    getContents({ token: await getTokenCatalogo() }),
     minhaLista(profile.id),
   ]);
   const concluidos = progresso.concluidos.length;
@@ -102,6 +104,20 @@ export default async function MinhaAreaPage() {
         year: "numeric",
       })
     : null;
+
+  // Trilha do colaborador: as categorias com conteúdo liberado para ele e o andamento em cada uma.
+  const trilhas = ehColaborador
+    ? Array.from(
+        catalogo.reduce((mapa, item) => {
+          if (!item.category) return mapa;
+          const atual = mapa.get(item.category) ?? { slug: item.category, nome: item.categoryName ?? item.category, total: 0, concluidos: 0 };
+          atual.total += 1;
+          if (progresso.concluidos.some((c) => c.slug === item.slug)) atual.concluidos += 1;
+          mapa.set(item.category, atual);
+          return mapa;
+        }, new Map<string, { slug: string; nome: string; total: number; concluidos: number }>()),
+      ).map(([, v]) => v)
+    : [];
 
   const stats = [
     { label: "Conteúdos concluídos", valor: concluidos, sufixo: "" },
@@ -124,10 +140,17 @@ export default async function MinhaAreaPage() {
                 <UserIcon className="relative h-7 w-7 text-muted" />
               </span>
               <div>
+                {ehColaborador && (
+                  <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-blue-light">Painel do colaborador</p>
+                )}
                 <p className="text-sm text-brand-orange-light">{saudacao},</p>
                 <h1 className="text-xl font-bold text-foreground sm:text-2xl">{primeiroNome}</h1>
                 <p className="text-sm text-muted">{profile.email}</p>
-                {membroDesde && <p className="mt-0.5 text-xs text-subtle">Associado desde {membroDesde}</p>}
+                {membroDesde && (
+                  <p className="mt-0.5 text-xs text-subtle">
+                    {ehColaborador ? `Colaborador desde ${membroDesde}` : `Associado desde ${membroDesde}`}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -139,7 +162,7 @@ export default async function MinhaAreaPage() {
               )}
               {(admin || editor) && (
                 <Link href="/admin/conteudos" className={botao}>
-                  Capas dos vídeos
+                  Vídeos: capa e visualização
                 </Link>
               )}
               {admin && (
@@ -208,6 +231,28 @@ export default async function MinhaAreaPage() {
                 Explorar conteúdos
               </Link>
             </Reveal>
+          )}
+
+          {ehColaborador && trilhas.length > 0 && (
+            <>
+              <h2 className="mt-12 text-xl font-bold tracking-tight text-foreground sm:text-2xl">Sua trilha de treinamento</h2>
+              <p className="mt-2 text-sm text-muted">Os cursos liberados para a equipe da sua loja, por assunto.</p>
+              <Stagger stagger={0.06} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {trilhas.map((t) => (
+                  <StaggerItem key={t.slug}>
+                    <Link
+                      href={`/categorias/${t.slug}`}
+                      className="group flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-surface px-4 py-3.5 transition-colors hover:border-brand-blue-light/50 hover:bg-surface-elevated"
+                    >
+                      <span className="min-w-0 truncate text-sm font-semibold text-foreground">{t.nome}</span>
+                      <span className="flex-shrink-0 text-xs text-muted">
+                        {t.concluidos} de {t.total}
+                      </span>
+                    </Link>
+                  </StaggerItem>
+                ))}
+              </Stagger>
+            </>
           )}
 
           {salvos.length > 0 && (

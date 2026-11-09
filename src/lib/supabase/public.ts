@@ -22,3 +22,16 @@ if (!url || !key) {
 export const supabasePublic = createClient(url, key, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
+
+/**
+ * Cliente de leitura COM a sessão do usuário (o token de acesso vai no cabeçalho, sem cookies).
+ * Passa pelas políticas do papel `authenticated`: é o que faz o conteúdo "só do lojista" aparecer
+ * para o lojista e ficar escondido do colaborador. O token entra na chave do cache do catálogo
+ * (unstable_cache não pode ler cookies), então cada pessoa logada tem o próprio cache de 60 s.
+ */
+export function supabaseComToken(token: string) {
+  return createClient(url!, key!, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+}

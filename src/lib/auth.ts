@@ -48,6 +48,26 @@ export const getUsuarioRapido = cache(async () => {
   return claims?.sub ? { id: claims.sub, email: typeof claims.email === "string" ? claims.email : "" } : null;
 });
 
+/**
+ * Token de acesso da pessoa logada (leitura local do cookie, sem ir ao Supabase), usado para o catálogo
+ * enxergar o que o papel dela permite. Quem não está logado fica sem token e vê só o que é aberto.
+ * Não decide acesso: quem decide é o RLS no banco, que valida o token.
+ */
+export const getTokenCatalogo = cache(async (): Promise<string | undefined> => {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token ?? undefined;
+});
+
+export type PapelAcademy = "visitante" | "colaborador" | "lojista";
+
+/** Papel de quem está logado: lojista (master, interno, editor, admin), colaborador (funcionário) ou visitante. */
+export const getPapel = cache(async (): Promise<PapelAcademy> => {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("academy_meu_papel");
+  return data === "lojista" || data === "colaborador" ? data : "visitante";
+});
+
 /** Nome e e-mail para o cabeçalho: uma consulta só (profiles), sem os vínculos de loja. */
 export const getPerfilCabecalho = cache(async () => {
   const usuario = await getUsuarioRapido();

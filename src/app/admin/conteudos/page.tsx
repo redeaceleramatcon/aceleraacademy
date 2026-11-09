@@ -30,7 +30,11 @@ export default async function CapasPage() {
 
           <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h1 className="text-xl font-bold text-foreground sm:text-2xl">Capas dos vídeos</h1>
+              <h1 className="text-xl font-bold text-foreground sm:text-2xl">Vídeos: capa e visualização</h1>
+              <p className="mt-2 max-w-2xl text-sm text-muted">
+                Em <strong className="text-foreground">Visualização</strong>, escolha quem pode ver cada vídeo. O lojista sempre vê todos os
+                cursos; o filtro vale só para os colaboradores, que não veem o que é &quot;Só lojistas&quot;. A mudança vale na hora.
+              </p>
               <p className="mt-2 max-w-2xl text-sm text-muted">
                 A capa aparece nos cards da Home, do catálogo e da busca. Sem capa própria, a Academy usa a miniatura que o
                 YouTube gera (que às vezes demora a atualizar ou mostra um quadro do vídeo). {semCapa > 0 && (

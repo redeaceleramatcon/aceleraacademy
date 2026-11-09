@@ -5,6 +5,7 @@ import { HeroVideoCard } from "@/components/home/HeroVideoCard";
 import { AstronautaHero } from "@/components/marca/AstronautaHero";
 import { HeroBackground } from "@/components/motion/HeroBackground";
 import { HeroFade, Magnetic, ScrollHint, WordReveal } from "@/components/motion/HeroMotion";
+import { getTokenCatalogo } from "@/lib/auth";
 import { getHeroContent } from "@/lib/data/content";
 
 /**
@@ -17,7 +18,7 @@ import { getHeroContent } from "@/lib/data/content";
  * e competia com o título.
  */
 export async function Hero() {
-  const item = await getHeroContent();
+  const item = await getHeroContent(await getTokenCatalogo());
   if (!item) return null;
 
   const meta = [item.mentor, item.duration, item.categoryName].filter(Boolean);

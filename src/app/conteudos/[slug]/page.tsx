@@ -14,7 +14,7 @@ import { CopyLinkButton } from "@/components/conteudo/CopyLinkButton";
 import { Reveal } from "@/components/motion/Reveal";
 import { ChevronRightIcon, PlayIcon } from "@/components/icons";
 import { YoutubePlayer } from "@/components/conteudo/YoutubePlayer";
-import { getPerfilCabecalho, getUsuarioRapido } from "@/lib/auth";
+import { getPerfilCabecalho, getTokenCatalogo, getUsuarioRapido } from "@/lib/auth";
 import { getContentBySlug, getRelatedContent } from "@/lib/data/content";
 import { progressoDoConteudo } from "@/lib/meu-progresso";
 import { idsMinhaLista } from "@/lib/minha-lista";
@@ -46,10 +46,11 @@ export default async function ConteudoDetailPage({
 }) {
   void getPerfilCabecalho();
   const { slug } = await params;
-  const item = await getContentBySlug(slug);
+  const token = await getTokenCatalogo();
+  const item = await getContentBySlug(slug, token);
   if (!item) notFound();
 
-  const [related, user] = await Promise.all([getRelatedContent(item.category, item.slug), getUsuarioRapido()]);
+  const [related, user] = await Promise.all([getRelatedContent(item.category, item.slug, token), getUsuarioRapido()]);
   // Onde o aluno parou (só se ainda não concluiu): o player abre direto nesse ponto.
   const [andamento, salvos] = user
     ? await Promise.all([progressoDoConteudo(user.id, item.uuid), idsMinhaLista(user.id)])

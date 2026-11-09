@@ -36,7 +36,11 @@ export interface ContentItem {
   partner?: string;
   progress?: number;
   featured?: boolean;
+  /** Para quem o conteúdo foi feito: só o lojista, a equipe (colaborador) ou ambos. */
+  audience?: PublicoAlvo;
 }
+
+export type PublicoAlvo = "lojista" | "colaborador" | "ambos";
 
 export interface ContentVideo {
   provider: "youtube" | "cloudflare" | "vimeo" | "mux";
