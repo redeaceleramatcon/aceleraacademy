@@ -3,12 +3,11 @@ import { redirect } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Container } from "@/components/ui/Container";
-import { Stagger, StaggerItem } from "@/components/motion/Reveal";
 import { getSessionUser } from "@/lib/auth";
 import { podePublicarConteudo } from "@/lib/atividade";
 import { listarConteudosParaCapa } from "@/lib/conteudo";
 import { BotaoRenovar } from "./BotaoRenovar";
-import { LinhaCapa } from "./LinhaCapa";
+import { ListaConteudos } from "./ListaConteudos";
 
 /** Capas dos vídeos — admin ou editor. Aqui se troca a capa de qualquer conteúdo já publicado. */
 export default async function CapasPage() {
@@ -63,15 +62,7 @@ export default async function CapasPage() {
             />
           </div>
 
-          <Stagger stagger={0.04} className="mt-8">
-            <div className="space-y-4">
-              {conteudos.map((c) => (
-                <StaggerItem key={c.id}>
-                  <LinhaCapa item={c} />
-                </StaggerItem>
-              ))}
-            </div>
-          </Stagger>
+          <ListaConteudos itens={conteudos} />
         </Container>
       </main>
       <Footer />

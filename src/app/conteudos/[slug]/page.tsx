@@ -14,7 +14,9 @@ import { CopyLinkButton } from "@/components/conteudo/CopyLinkButton";
 import { Reveal } from "@/components/motion/Reveal";
 import { ChevronRightIcon, PlayIcon } from "@/components/icons";
 import { YoutubePlayer } from "@/components/conteudo/YoutubePlayer";
-import { getPerfilCabecalho, getTokenCatalogo, getUsuarioRapido } from "@/lib/auth";
+import { getPerfilCabecalho, getTokenCatalogo, getUsuarioRapido, getVerComoColaborador } from "@/lib/auth";
+import { podePublicarConteudo } from "@/lib/atividade";
+import { PublicoAlvoSelect } from "@/app/admin/conteudos/PublicoAlvoSelect";
 import { getContentBySlug, getRelatedContent } from "@/lib/data/content";
 import { progressoDoConteudo } from "@/lib/meu-progresso";
 import { idsMinhaLista } from "@/lib/minha-lista";
@@ -55,6 +57,8 @@ export default async function ConteudoDetailPage({
   const [andamento, salvos] = user
     ? await Promise.all([progressoDoConteudo(user.id, item.uuid), idsMinhaLista(user.id)])
     : [null, [] as string[]];
+  // Admin/editor (fora do modo "ver como colaborador") escolhe aqui mesmo quem pode ver este vídeo.
+  const podeEditarVisualizacao = user ? (await podePublicarConteudo(user.id)) && !(await getVerComoColaborador()) : false;
   const retomarDe = andamento && !andamento.completo && andamento.percent < 95 ? andamento.posicaoSegundos : 0;
   const meta = [item.mentor, item.duration, item.categoryName].filter(Boolean);
   const totalLessons = item.modules.reduce((total, module) => total + module.lessons.length, 0);
@@ -278,6 +282,14 @@ export default async function ConteudoDetailPage({
                     ))}
                   </ul>
                 </>
+              )}
+
+              {podeEditarVisualizacao && (
+                <div className="mb-4 rounded-xl border border-brand-orange/30 bg-brand-orange/5 p-3">
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-brand-orange-light">Só você vê: quem pode assistir</p>
+                  <PublicoAlvoSelect contentId={item.uuid} inicial={item.audience ?? "ambos"} />
+                  <p className="mt-2 text-[11px] leading-snug text-subtle">O lojista sempre vê tudo. A escolha vale só para os colaboradores.</p>
+                </div>
               )}
 
               <div className="my-4 border-t border-white/10" />
